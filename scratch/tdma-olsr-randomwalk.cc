@@ -353,7 +353,6 @@ TdmaExample::CreateDevices (double txpDistance)
   TdmaControllerHelper controller;
   controller.Set ("SlotTime", TimeValue (MicroSeconds (1000)));
   controller.Set ("CtrlSlotTime", TimeValue (MicroSeconds (500)));
-  controller.Set ("EntrySlotTime", TimeValue (MicroSeconds (100)));
   controller.Set ("GuardTime", TimeValue (MicroSeconds (0)));
   controller.Set ("InterFrameTime", TimeValue (MicroSeconds (0)));
   tdma.SetTdmaControllerHelper (controller);
