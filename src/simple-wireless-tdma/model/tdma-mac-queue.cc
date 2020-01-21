@@ -139,6 +139,10 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
   std::string s = std::string((char*)buffer);
   delete buffer;
 
+  std::cout<<"PacketUid: "<< packet->GetUid() <<", PacketHeader:  ";
+  std::cout<<packet->ToString();
+  std::cout<<std::endl;
+
 
   bool isCtrl = false;
   if (s.compare(0,5,"#TDMA") == 0 )

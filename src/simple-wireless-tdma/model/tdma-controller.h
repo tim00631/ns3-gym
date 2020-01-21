@@ -138,8 +138,10 @@ public:
 
   void AddNetDevice (uint32_t nodeId,Ptr<TdmaNetDevice> device);
   void SetNodeNum (uint32_t);
+  uint32_t GetnNodes();
   void UpdateList (std::string s, uint32_t NodeId);
   void DeleteTdmaSlot (uint32_t slot, Ptr<TdmaMac> macPtr);
+  std::vector<std::pair<uint32_t,uint32_t> > GetNodeUsedList (uint32_t NodeId);
 
   void AddNonDataBytes (uint64_t bytes);
   uint64_t GetNonDataBytes (void);

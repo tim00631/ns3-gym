@@ -43,6 +43,7 @@
 #include <cmath>
 #include <string>
 #include "ns3/llc-snap-header.h"
+#include "ns3/olsr-routing-protocol.h"
 
 using namespace ns3;
 
@@ -73,6 +74,31 @@ GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
       socket->Close ();
     }
 }
+
+
+void
+GetModelData (Ptr<Node> node)
+{
+  
+  Ptr<NetDevice> dev = node->GetDevice(0);
+  Ptr<TdmaNetDevice> tdma_dev = DynamicCast<TdmaNetDevice>(dev);
+  std::vector<std::pair<uint32_t,uint32_t> > nodeUsedList = tdma_dev->GetTdmaController()->GetNodeUsedList(1);
+  
+  std::cout<<"UsedList:" <<std::endl;
+  for(uint32_t i=0;i<nodeUsedList.size();i++)
+  {
+    std::cout<<"idx:"<<i<<" : ("<<nodeUsedList[i].first << "," << nodeUsedList[i].second <<")" <<std::endl;
+  }
+/*
+  std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries() ;
+  std::cout<<"RoutingTable"<<std::endl;
+  for(uint32_t i=0;i<tdmaRoutingTable.size();i++)
+  {
+    std::cout<<"Dest: "<<tdmaRoutingTable[i].destAddr<<", distance: "<<tdmaRoutingTable[i].distance<<", next: "<<tdmaRoutingTable[i].nextAddr<<std::endl;
+  }
+*/
+}
+
 
 
 class TdmaExample
@@ -127,11 +153,12 @@ private:
   void ReceivePacket (Ptr <Socket> );
   Ptr <Socket> SetupPacketReceive (Ipv4Address, Ptr <Node> );
   void CheckThroughput ();
-
 };
 
 int main (int argc, char **argv)
 {
+  Packet::EnablePrinting ();
+
   TdmaExample test;
   uint32_t nWifis = 4;
   uint32_t Sink = 3;
@@ -291,6 +318,10 @@ TdmaExample::CaseRun (uint32_t nWifis, uint32_t Sink, double totalTime, std::str
   
   InstallApplications (selfGenerate);
 
+  Simulator::Schedule (Seconds (5), &GetModelData, nodes.Get(1));
+  
+
+
   std::cout << "\nStarting simulation for " << m_totalTime << " s ...\n";
 
   //CheckThroughput ();
@@ -429,3 +460,5 @@ TdmaExample::InstallApplications (bool selfGenerate)
   }
 
 }
+
+

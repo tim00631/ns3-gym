@@ -118,12 +118,12 @@ SimpleWirelessChannel::Send (Ptr<const Packet> p, Ptr<TdmaMacLow> sender)
       NS_LOG_UNCOND ("Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node " << sender->GetDevice ()->GetNode ()->GetId () << " sending to node " <<
                     tmp->GetDevice ()->GetNode ()->GetId () << " at distance " << distance <<
                     " meters; arriving time (ns): " << propagationTime << ", packet Size: " << p->GetSize () << ", Receiver: " << hdr.GetAddr1());
-/*
+
       std::cout <<  "Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node " << sender->GetDevice ()->GetNode ()->GetId () << " sending to node " <<
                     tmp->GetDevice ()->GetNode ()->GetId () << " at distance " << distance <<
                     " meters; arriving time (ns): " << propagationTime << ", packet Size: " << p->GetSize () << ", Receiver: " << hdr.GetAddr1() <<
 		    ", pktUid: " << p->GetUid() << std::endl;
-*/   
+   
           
       
       NS_LOG_DEBUG ("Node " << sender->GetDevice ()->GetNode ()->GetId () << " sending to node " <<

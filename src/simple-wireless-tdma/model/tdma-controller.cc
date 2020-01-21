@@ -873,4 +873,22 @@ TdmaController::GetRemainSlotTime (void)
   return m_tdmaRemainSlotTime;
 }
 
+uint32_t
+TdmaController::GetnNodes()
+{
+  return m_nNodes;
+}
+
+std::vector<std::pair<uint32_t,uint32_t>>
+TdmaController::GetNodeUsedList (uint32_t nodeId)
+{
+  std::vector<std::pair<uint32_t,uint32_t>> nodeUsedList;
+  for(uint32_t i=0;i<100;i++)
+  {
+    nodeUsedList.push_back(m_tdmaUsedListCur[nodeId][i]);
+  }
+
+  return nodeUsedList;
+}
+
 } // namespace ns3
