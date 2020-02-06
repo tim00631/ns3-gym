@@ -51,7 +51,7 @@ using namespace ns3;
 uint16_t port = 8080;
 
 NS_LOG_COMPONENT_DEFINE ("TdmaExample");
-
+/*
 void 
 GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
                              uint32_t remainTransmit, Time pktInterval , uint32_t pktNum)
@@ -75,30 +75,7 @@ GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
     }
 }
 
-
-void
-GetModelData (Ptr<Node> node)
-{
-  
-  Ptr<NetDevice> dev = node->GetDevice(0);
-  Ptr<TdmaNetDevice> tdma_dev = DynamicCast<TdmaNetDevice>(dev);
-  std::vector<std::pair<uint32_t,uint32_t> > nodeUsedList = tdma_dev->GetTdmaController()->GetNodeUsedList(1);
-  
-  std::cout<<"UsedList:" <<std::endl;
-  for(uint32_t i=0;i<nodeUsedList.size();i++)
-  {
-    std::cout<<"idx:"<<i<<" : ("<<nodeUsedList[i].first << "," << nodeUsedList[i].second <<")" <<std::endl;
-  }
-/*
-  std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries() ;
-  std::cout<<"RoutingTable"<<std::endl;
-  for(uint32_t i=0;i<tdmaRoutingTable.size();i++)
-  {
-    std::cout<<"Dest: "<<tdmaRoutingTable[i].destAddr<<", distance: "<<tdmaRoutingTable[i].distance<<", next: "<<tdmaRoutingTable[i].nextAddr<<std::endl;
-  }
 */
-}
-
 
 
 class TdmaExample
@@ -137,6 +114,7 @@ private:
   uint32_t m_interFrameGap;
   uint32_t m_pktNum;
   double m_pktInterval;
+  std::vector<std::map<Ipv4Address,Ptr<Socket>>> m_socketMap;
 
   std::map<double, double> m_transmitRangeMap;
 
@@ -153,6 +131,9 @@ private:
   void ReceivePacket (Ptr <Socket> );
   Ptr <Socket> SetupPacketReceive (Ipv4Address, Ptr <Node> );
   void CheckThroughput ();
+  void GetModelData (Ptr<Node> node);
+  void GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
+                             uint32_t remainTransmit, Time pktInterval , uint32_t pktNum);
 };
 
 int main (int argc, char **argv)
@@ -234,6 +215,67 @@ TdmaExample::TdmaExample ()
 {
   NS_LOG_FUNCTION (this);
 }
+
+void
+TdmaExample::GetModelData (Ptr<Node> node)
+{
+  
+  Ptr<NetDevice> dev = node->GetDevice(0);
+  Ptr<TdmaNetDevice> tdma_dev = DynamicCast<TdmaNetDevice>(dev);
+  std::vector<std::pair<uint32_t,uint32_t> > nodeUsedList = tdma_dev->GetTdmaController()->GetNodeUsedList(1);
+  
+  std::cout<<"UsedList:" <<std::endl;
+  for(uint32_t i=0;i<nodeUsedList.size();i++)
+  {
+    std::cout<<"idx:"<<i<<" : ("<<nodeUsedList[i].first << "," << nodeUsedList[i].second <<")" <<std::endl;
+  }
+/*
+  std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries() ;
+  std::cout<<"RoutingTable"<<std::endl;
+  for(uint32_t i=0;i<tdmaRoutingTable.size();i++)
+  {
+    std::cout<<"Dest: "<<tdmaRoutingTable[i].destAddr<<", distance: "<<tdmaRoutingTable[i].distance<<", next: "<<tdmaRoutingTable[i].nextAddr<<std::endl;
+  }
+*/
+}
+
+void 
+TdmaExample::GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
+                             uint32_t remainTransmit, Time pktInterval , uint32_t pktNum)
+{
+
+  std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries();
+
+  std::random_shuffle (tdmaRoutingTable.begin(),tdmaRoutingTable.end());
+  
+  Ptr<Socket> socket;
+
+  if (tdmaRoutingTable.size() != 0)
+  {
+  	std::map<Ipv4Address,Ptr<Socket>>::iterator it = m_socketMap[node->GetId()].find(tdmaRoutingTable[0].destAddr);
+	if (it != m_socketMap[node->GetId()].end() && remainTransmit > 0)
+	{
+		std::ostringstream msg; msg << "Hello World!" << '\0';
+		Ptr<Packet> packet = Create<Packet> ((uint8_t*) msg.str().c_str(), pktSize);
+   
+		for (uint32_t i=0;i<pktNum;i++)
+		{
+      				it->second->Send (packet);
+		}
+	
+      		Simulator::Schedule (pktInterval, &TdmaExample::GenerateTraffic, this,
+                	           node, pktSize,remainTransmit - 1, pktInterval, pktNum);
+
+	}
+	else if (remainTransmit <= 0)
+	{
+		it->second->Close();
+
+	}
+  }
+  
+}
+
 
 // ReceivePacket Callback function
 void
@@ -318,7 +360,7 @@ TdmaExample::CaseRun (uint32_t nWifis, uint32_t Sink, double totalTime, std::str
   
   InstallApplications (selfGenerate);
 
-  Simulator::Schedule (Seconds (5), &GetModelData, nodes.Get(1));
+  Simulator::Schedule (Seconds (5), &TdmaExample::GetModelData,this, nodes.Get(1));
   
 
 
@@ -415,6 +457,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
 {
   if (selfGenerate)
   {
+/*
 	for (uint32_t i=1;i<m_nWifis;i++)
 	{
 		Ptr<Node> node = NodeList::GetNode (i);
@@ -435,6 +478,31 @@ TdmaExample::InstallApplications (bool selfGenerate)
 
 		}
 
+	}
+*/
+
+	for (uint32_t i=0;i<m_nWifis;i++)
+	{
+		Ptr<Node> node = NodeList::GetNode (i);
+		Ptr<Socket> sink = SetupPacketReceive (Ipv4Address::GetAny(),node);
+		std::map<Ipv4Address,Ptr<Socket>> ip2socket;
+
+		for(uint32_t j=0;j<m_nWifis;j++)
+		{
+			if(i == j) continue;
+			
+			TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  			Ptr<Socket> source = Socket::CreateSocket (nodes.Get (j), tid);
+		  	InetSocketAddress remote = InetSocketAddress (interfaces.GetAddress (i, 0), port);
+		  	source->Connect (remote);
+			
+			ip2socket.insert(std::make_pair(interfaces.GetAddress (j, 0),source));	
+			
+		}
+		m_socketMap.push_back(ip2socket);
+
+		Simulator::Schedule (Seconds (m_dataStart), &TdmaExample::GenerateTraffic, this,
+					node, 128, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
 	}
 
   }
