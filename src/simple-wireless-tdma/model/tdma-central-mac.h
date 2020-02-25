@@ -102,6 +102,8 @@ public:
   Ptr<TdmaMacLow> GetTdmaMacLow (void) const;
   void RequestForChannelAccess (void);
   virtual void FlushQueue (void) const;
+  virtual std::vector<std::pair<Ipv4Address,uint32_t>> GetQueuePktStatus (void) const;
+
 private:
   void Receive (Ptr<Packet> packet, const WifiMacHeader *hdr);
   void ForwardUp (Ptr<Packet> packet, Mac48Address from, Mac48Address to);

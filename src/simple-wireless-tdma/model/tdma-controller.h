@@ -164,6 +164,7 @@ public:
 
   void AddRemainSlotTime (uint64_t time);
   uint64_t GetRemainSlotTime (void);
+  std::vector<std::pair<Ipv4Address, uint32_t> > GetTop3QueuePktStatus (uint32_t slotNum);
 
 private:
   static Time GetDefaultSlotTime (void);

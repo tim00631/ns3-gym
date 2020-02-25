@@ -34,6 +34,8 @@
 #include "tdma-mac-queue.h"
 
 #include "ns3/llc-snap-header.h"
+#include "ns3/ipv4-header.h"
+#include <algorithm>
 
 using namespace std;
 NS_LOG_COMPONENT_DEFINE ("TdmaMacQueue");
@@ -160,6 +162,8 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
   else
   {
   	if (m_size[0] == m_maxSize) return false;
+
+	
   	isCtrl = false;
   }
   
@@ -296,4 +300,48 @@ TdmaMacQueue::Remove (Ptr<const Packet> packet, bool isCtrl)
     }
   return false;
 }
+
+std::vector<std::pair<Ipv4Address,uint32_t>>
+TdmaMacQueue::GetPktStatus ()
+{
+  std::vector<std::pair<Ipv4Address,uint32_t>> queuePktStatus;
+  
+  LlcSnapHeader h;
+  Ipv4Header iph;
+
+  for (PacketQueueI it = m_queue[0].begin (); it != m_queue[0].end(); it++)
+  {
+    std::size_t idx_ipv4 = it->packet->ToString().find("Ipv4Header");
+    if (idx_ipv4 != string::npos)
+    {
+	Ptr<Packet> copy = it->packet->Copy();
+  	copy->RemoveHeader(h);
+ 	copy->RemoveHeader (iph);
+	for (uint32_t i=0;i<queuePktStatus.size();i++)
+	{
+		if (queuePktStatus[i].first == iph.GetDestination()) 
+		{
+			queuePktStatus[i].second += iph.GetPayloadSize();
+			break;
+		}
+		else if (i == queuePktStatus.size()-1)
+		{
+			queuePktStatus.push_back(std::pair<Ipv4Address,uint32_t> (iph.GetDestination(),iph.GetPayloadSize()));
+		}
+	}
+    }
+  }
+
+  std::sort(queuePktStatus.begin(),queuePktStatus.end(),[](const std::pair<Ipv4Address,uint32_t>& l, const std::pair<Ipv4Address,uint32_t>& r) 
+	    {
+		return l.second != r.second ? l.second < r.second : l.first < r.first;
+	    });
+ 
+  uint32_t topN = queuePktStatus.size() > 3 ? 3 : queuePktStatus.size(); 
+  std::vector<std::pair<Ipv4Address,uint32_t>> top3queuePktStatus(queuePktStatus.begin(),queuePktStatus.begin()+topN);
+  
+
+  return top3queuePktStatus;
+}
+
 } // namespace ns3

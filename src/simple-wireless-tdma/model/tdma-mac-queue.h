@@ -106,6 +106,9 @@ public:
    * \brief returns size of TdmaMacQueue
    */
   uint32_t GetSize (bool isCtrl);
+
+  std::vector<std::pair<Ipv4Address,uint32_t>> GetPktStatus (void);
+
 private:
   struct Item;
 

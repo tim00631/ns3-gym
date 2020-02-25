@@ -146,7 +146,13 @@ TdmaController::TdmaController ()
       m_tdmaCtrlSlotMap[i] = i;
       m_tdmaEntrySlotNum[i] = -1;
   }
-  
+
+  m_tdmaCtrlSlotMapRev[0] = 0;
+  for (uint32_t i=1;i<64;i++)
+  {
+      m_tdmaCtrlSlotMapRev[m_tdmaCtrlSlotMap[i]] = i;
+  }
+
   for (uint32_t i=0;i<64;i++)
   {
 	for (uint32_t j=0;j<100;j++)
@@ -195,7 +201,7 @@ TdmaController::StartTdmaSessions (void)
 
   ScheduleTdmaSession (0);
   
-  ShiftCtrlSlot();
+  //ShiftCtrlSlot();
 }
 
 // Rotate the current frame's UsedList to previous frame's UsedList
@@ -720,6 +726,22 @@ TdmaController::ShiftCtrlSlot (void)
  
 }
 
+std::vector<std::pair<Ipv4Address, uint32_t>>
+TdmaController::GetTop3QueuePktStatus (uint32_t slotNum)
+{
+
+  std::map<uint32_t, std::vector<Ptr<TdmaMac> > >::iterator it = m_slotPtrs.find (slotNum);
+
+  NS_ASSERT (it->second[0] != NULL);
+  return it->second[0]->GetQueuePktStatus ();
+
+  
+}
+
+
+/*
+  For Calculating kpi
+*/
 void
 TdmaController::AddNonDataBytes( uint64_t bytes )
 {

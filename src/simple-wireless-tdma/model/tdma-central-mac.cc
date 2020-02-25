@@ -426,4 +426,11 @@ TdmaCentralMac::FlushQueue(void) const
   m_queue->Flush();
 }
 
+std::vector<std::pair<Ipv4Address,uint32_t>>
+TdmaCentralMac::GetQueuePktStatus (void) const
+{
+  return m_queue->GetPktStatus ();
+
+}
+
 } // namespace ns3

@@ -39,20 +39,26 @@
 #include "ns3/dsdv-module.h"
 #include "ns3/olsr-helper.h"
 #include "ns3/mobility-model.h"
+#include "ns3/llc-snap-header.h"
+#include "ns3/olsr-routing-protocol.h"
+#include "ns3/object.h"
+
+#include "ns3/opengym-module.h"
+#include "tdma-rl-env.h"
+
 #include <iostream>
 #include <cmath>
 #include <string>
-#include "ns3/llc-snap-header.h"
-#include "ns3/olsr-routing-protocol.h"
-
-#include "tdma-rl-env.h"
 
 using namespace ns3;
 
 
 uint16_t port = 8080;
+uint32_t openGymPort = 5555;
 
 NS_LOG_COMPONENT_DEFINE ("TdmaExample");
+
+
 /*
 void 
 GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
@@ -143,7 +149,7 @@ int main (int argc, char **argv)
   Packet::EnablePrinting ();
 
   TdmaExample test;
-  uint32_t nWifis = 4;
+  uint32_t nWifis = 64;
   uint32_t Sink = 3;
   double totalTime = 100.0;
   std::string rate ("8kbps");
@@ -162,7 +168,7 @@ int main (int argc, char **argv)
   uint32_t guardTime = 0;
   uint32_t pktNum = 1;
   double pktInterval = 1.0;
-
+  uint32_t simSeed = 0;
   srand(30000);
 
   CommandLine cmd;
@@ -181,6 +187,8 @@ int main (int argc, char **argv)
   cmd.AddValue ("interFrameGap", "Duration between frames [Default(us):0]", interFrameGap);
   cmd.AddValue ("pktNum","Number of Packet in each transmission",pktNum);
   cmd.AddValue ("pktInterval","Time between two packet stream",pktInterval);
+  cmd.AddValue ("openGymPort", "OpenGymPort", openGymPort);
+  cmd.AddValue ("simSeed", "simSeed", simSeed);
   cmd.Parse (argc, argv);
   
   SeedManager::SetSeed (2321);
@@ -355,6 +363,10 @@ TdmaExample::CaseRun (uint32_t nWifis, uint32_t Sink, double totalTime, std::str
   ss3 << txpDistance;
   std::string t_txpDistance = ss3.str ();
 
+  Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (openGymPort);
+  Ptr<TdmaGymEnv> tdmaGymEnv = CreateObject<TdmaGymEnv> ();
+  tdmaGymEnv->SetOpenGymInterface(openGymInterface);
+
   CreateNodes ();
   CreateDevices (txpDistance);
   SetupMobility ();
@@ -362,8 +374,7 @@ TdmaExample::CaseRun (uint32_t nWifis, uint32_t Sink, double totalTime, std::str
   
   InstallApplications (selfGenerate);
 
-  Simulator::Schedule (Seconds (5), &TdmaExample::GetModelData,this, nodes.Get(1));
-  
+  //Simulator::Schedule (Seconds (5), &TdmaExample::GetModelData,this, nodes.Get(1));
 
 
   std::cout << "\nStarting simulation for " << m_totalTime << " s ...\n";
@@ -372,6 +383,8 @@ TdmaExample::CaseRun (uint32_t nWifis, uint32_t Sink, double totalTime, std::str
 
   Simulator::Stop (Seconds (m_totalTime));
   Simulator::Run ();
+
+  openGymInterface->NotifySimulationEnd();
   Simulator::Destroy ();
 }
 
