@@ -59,33 +59,6 @@ uint32_t openGymPort = 5555;
 NS_LOG_COMPONENT_DEFINE ("TdmaExample");
 
 
-/*
-void 
-GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
-                             uint32_t remainTransmit, Time pktInterval , uint32_t pktNum)
-{
-  if (remainTransmit > 0)
-    {
-      	std::ostringstream msg; msg << "Hello World!" << '\0';
-	Ptr<Packet> packet = Create<Packet> ((uint8_t*) msg.str().c_str(), pktSize);
-   
-	for (uint32_t i=0;i<pktNum;i++)
-	{
-      			socket->Send (packet);
-	}
-	
-      	Simulator::Schedule (pktInterval, &GenerateTraffic,
-                           socket, pktSize,remainTransmit - 1, pktInterval, pktNum);
-    }
-  else
-    {
-      socket->Close ();
-    }
-}
-
-*/
-
-
 class TdmaExample
 {
 public:
@@ -139,7 +112,6 @@ private:
   void ReceivePacket (Ptr <Socket> );
   Ptr <Socket> SetupPacketReceive (Ipv4Address, Ptr <Node> );
   void CheckThroughput ();
-  void GetModelData (Ptr<Node> node);
   void GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
                              uint32_t remainTransmit, Time pktInterval , uint32_t pktNum);
 };
@@ -191,7 +163,8 @@ int main (int argc, char **argv)
   cmd.AddValue ("simSeed", "simSeed", simSeed);
   cmd.Parse (argc, argv);
   
-  SeedManager::SetSeed (2321);
+  RngSeedManager::SetSeed (2321);
+  RngSeedManager::SetRun (simSeed);
 
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", StringValue ("1000")); // bytes!
   Config::SetDefault ("ns3::OnOffApplication::DataRate", StringValue (rate));
@@ -226,28 +199,6 @@ TdmaExample::TdmaExample ()
   NS_LOG_FUNCTION (this);
 }
 
-void
-TdmaExample::GetModelData (Ptr<Node> node)
-{
-  
-  Ptr<NetDevice> dev = node->GetDevice(0);
-  Ptr<TdmaNetDevice> tdma_dev = DynamicCast<TdmaNetDevice>(dev);
-  std::vector<std::pair<uint32_t,uint32_t> > nodeUsedList = tdma_dev->GetTdmaController()->GetNodeUsedList(1);
-  
-  std::cout<<"UsedList:" <<std::endl;
-  for(uint32_t i=0;i<nodeUsedList.size();i++)
-  {
-    std::cout<<"idx:"<<i<<" : ("<<nodeUsedList[i].first << "," << nodeUsedList[i].second <<")" <<std::endl;
-  }
-/*
-  std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries() ;
-  std::cout<<"RoutingTable"<<std::endl;
-  for(uint32_t i=0;i<tdmaRoutingTable.size();i++)
-  {
-    std::cout<<"Dest: "<<tdmaRoutingTable[i].destAddr<<", distance: "<<tdmaRoutingTable[i].distance<<", next: "<<tdmaRoutingTable[i].nextAddr<<std::endl;
-  }
-*/
-}
 
 void 
 TdmaExample::GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
@@ -256,13 +207,19 @@ TdmaExample::GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
 
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries();
 
-  std::random_shuffle (tdmaRoutingTable.begin(),tdmaRoutingTable.end());
+  Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
+  rng->SetAttribute ("Min",DoubleValue (0));
+  rng->SetAttribute ("Max",DoubleValue (tdmaRoutingTable.size()));
+  
+  uint32_t rngVal = rng->GetValue();
+
+  //std::random_shuffle (tdmaRoutingTable.begin(),tdmaRoutingTable.end());
   
   Ptr<Socket> socket;
 
   if (tdmaRoutingTable.size() != 0)
   {
-  	std::map<Ipv4Address,Ptr<Socket>>::iterator it = m_socketMap[node->GetId()].find(tdmaRoutingTable[0].destAddr);
+  	std::map<Ipv4Address,Ptr<Socket>>::iterator it = m_socketMap[node->GetId()].find(tdmaRoutingTable[rngVal].destAddr);
 	if (it != m_socketMap[node->GetId()].end() && remainTransmit > 0)
 	{
 		std::ostringstream msg; msg << "Hello World!" << '\0';
@@ -373,8 +330,6 @@ TdmaExample::CaseRun (uint32_t nWifis, uint32_t Sink, double totalTime, std::str
   InstallInternetStack ();
   
   InstallApplications (selfGenerate);
-
-  //Simulator::Schedule (Seconds (5), &TdmaExample::GetModelData,this, nodes.Get(1));
 
 
   std::cout << "\nStarting simulation for " << m_totalTime << " s ...\n";

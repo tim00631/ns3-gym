@@ -163,7 +163,7 @@ TdmaController::TdmaController ()
   }
 
   // random backoff 
-  srand( 30000 );
+  //srand( 30000 );
 }
 
 TdmaController::~TdmaController ()
@@ -503,7 +503,14 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   std::vector<uint32_t> candidateList_unused;
   std::vector<uint32_t> candidateList_priority;
   std::vector<uint32_t> unusedList_select;
-  
+
+  //Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
+  //rng->SetAttribute ("Min", DoubleValue (1));
+  //rng->SetAttribute ("Max", DoubleValue (3));
+
+  //double value = x->GetValue ();
+  //cout <<"value:"<<value<< endl;
+ 
   uint32_t priority = rand() % 3 + 1;
   uint32_t num = rand() % 4; // Num of slot the node need to use (0~3)
   

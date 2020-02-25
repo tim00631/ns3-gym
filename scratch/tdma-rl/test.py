@@ -12,13 +12,10 @@ seed = 0
 simArgs = {"--simTime": simTime,
            "--testArg": 123}
 
-print ("Creating ns3 env")
 env = gym.make('ns3-v0')
 #env = ns3env.Ns3Env(debug=True)
-print ("Created successfully")
 
 env.reset()
-print ("reset env")
 
 
 

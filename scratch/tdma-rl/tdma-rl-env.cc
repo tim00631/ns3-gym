@@ -27,7 +27,6 @@ TdmaGymEnv::TdmaGymEnv ()
 	m_ip2id.insert(std::pair<Ipv4Address,uint32_t>(addr,i));
   }
 
-
   Simulator::Schedule (Seconds(0.0), &TdmaGymEnv::ScheduleNextStateRead, this);
 
 }
@@ -38,7 +37,7 @@ TdmaGymEnv::TdmaGymEnv (Time stepInterval1, Time stepInterval2)
   m_slotNum = 0;
   m_stepInterval1 = stepInterval1;
   m_stepInterval2 = stepInterval2;
-/*
+
   for (uint32_t i=0;i<NodeList::GetNNodes();i++)
   {
 	Ptr<Node> nodeId = NodeList::GetNode(i);
@@ -46,7 +45,7 @@ TdmaGymEnv::TdmaGymEnv (Time stepInterval1, Time stepInterval2)
         Ipv4Address addr = ipv4->GetAddress(1,0).GetLocal();
 	m_ip2id.insert(std::pair<Ipv4Address,uint32_t>(addr,i));
   }
-*/
+
   Simulator::Schedule (Seconds(0.0), &TdmaGymEnv::ScheduleNextStateRead, this);
 
 }
@@ -98,10 +97,10 @@ TdmaGymEnv::GetActionSpace()
   // output : Data slot number
   uint32_t max_slots = 3; // the max slots the node could choose
 
-  float low = 0;
+  float low = -1;
   float high = 99;
   std::vector<uint32_t> shape = {max_slots,};
-  std::string dtype = TypeNameGet<uint32_t> ();
+  std::string dtype = TypeNameGet<int32_t> ();
 
   Ptr<OpenGymBoxSpace> box = CreateObject<OpenGymBoxSpace> (low, high, shape, dtype);
   NS_LOG_UNCOND ("TdmaGetActionSpace: "<<box);
@@ -117,7 +116,7 @@ TdmaGymEnv::GetObservationSpace()
   NS_LOG_FUNCTION (this);
   // input :
   // Slot Used Table (size : 100 slots)
-  // tdma queue top 3 packet percentage 
+  // tdma queue top 3 packet bytes 
   uint32_t dataSlotNum = 100;
 
   float low = -1;
