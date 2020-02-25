@@ -67,11 +67,8 @@ SimpleWirelessChannel::Send (Ptr<const Packet> p, Ptr<TdmaMacLow> sender)
   NS_LOG_FUNCTION (p << sender);
 
   bool isCollision;
-  //td::vector<std::pair<EventId,Mac48Address>> tmp_TransmissionEvent; 
   std::vector<EventInfo> tmp_TransmissionEvent; 
 
-  bool isCount = false; // For Calculate the broadcast transmitted bytes
-  bool isSent = false;
   for (TdmaMacLowList::const_iterator i = m_tdmaMacLowList.begin (); i != m_tdmaMacLowList.end (); ++i)
     {
       Ptr<TdmaMacLow> tmp = *i;
@@ -90,25 +87,8 @@ SimpleWirelessChannel::Send (Ptr<const Packet> p, Ptr<TdmaMacLow> sender)
           continue;
         }
       
-      isSent = true; 
       WifiMacHeader hdr;
       p->PeekHeader(hdr);
-
-      
-      // Calculate transmitted bytes (Only the traffic load to Receiver/broadcast)
-      if ( (hdr.GetAddr1().IsBroadcast() && !isCount ) || hdr.GetAddr1() == tmp->GetDevice()->GetMac()->GetAddress() ) 
-      {
-		isCount = true;
-      		if (sender->GetDevice()->GetTdmaController()->GetPacketType(p->GetUid()) )
-      		{
-			sender->GetDevice()->GetTdmaController()->AddNonDataBytes(p->GetSize());	
-      		}
-		else
-		{
-			if (!hdr.GetAddr1().IsBroadcast()) sender->GetDevice()->GetTdmaController()->AddDataBytes(p->GetSize());
-		}
-      		sender->GetDevice()->GetTdmaController()->AddTotalBytes(p->GetSize());
-      }
 
 
       // speed of light is 3.3 ns/meter
@@ -139,7 +119,6 @@ SimpleWirelessChannel::Send (Ptr<const Packet> p, Ptr<TdmaMacLow> sender)
       for (uint32_t i = 0; i < m_TransmissionEvent.size();i++)
 	{
 	   // remove expired( remain_time = 0 ) event
-	   //if ( Simulator::GetDelayLeft(m_TransmissionEvent[i].first) == Seconds(0.0) )
 	   if ( Simulator::GetDelayLeft(m_TransmissionEvent[i].eventId) == Seconds(0.0) )
 	   {
 		m_TransmissionEvent.erase(m_TransmissionEvent.begin () + i);
@@ -149,11 +128,9 @@ SimpleWirelessChannel::Send (Ptr<const Packet> p, Ptr<TdmaMacLow> sender)
 
 	   // check collision
 	   if ( m_TransmissionEvent[i].receiver == tmp->GetDevice()->GetMac()->GetAddress() && m_TransmissionEvent[i].sender != sender->GetDevice()->GetMac()->GetAddress())
-	   //if ( m_TransmissionEvent[i].second == tmp->GetDevice()->GetMac()->GetAddress() )
            {
 		NS_LOG_UNCOND ("Collision occurred, From node: " << sender->GetDevice()->GetNode()->GetId() << " to Node: " << tmp->GetDevice()->GetNode()->GetId() );
 		std::cout << "Collision occurred, From node: " << sender->GetDevice()->GetNode()->GetId() << " to Node: " << tmp->GetDevice()->GetNode()->GetId() << std::endl;
-		//Simulator::Cancel(m_TransmissionEvent[i].first);
 		Simulator::Cancel(m_TransmissionEvent[i].eventId);
 		isCollision = true;
 	   }
@@ -171,23 +148,17 @@ SimpleWirelessChannel::Send (Ptr<const Packet> p, Ptr<TdmaMacLow> sender)
       info.sender = sender->GetDevice()->GetMac()->GetAddress();
       info.receiver = tmp->GetDevice()->GetMac()->GetAddress();
       
-      //tmp_TransmissionEvent.push_back (std::make_pair <EventId,Mac48Address> (Simulator::Schedule ((propagationTime), &SimpleWirelessChannel::CopyPacket,this,tmp, p->Copy ()), tmp->GetDevice()->GetMac()->GetAddress()));
       tmp_TransmissionEvent.push_back (info);
       
 
       // Still add the Cancelled event into queue to prevent the later events collide with this Event
       if(isCollision)
       {  
-		//Simulator::Cancel(tmp_TransmissionEvent[tmp_TransmissionEvent.size()-1].first);
 		Simulator::Cancel(tmp_TransmissionEvent[tmp_TransmissionEvent.size()-1].eventId);
 		
-		// Delete packet type
-		//if (hdr.GetAddr1() == tmp->GetDevice()->GetMac()->GetAddress())	
-      		//sender->GetDevice()->GetTdmaController()->DeletePacketType(p->GetUid());	
       }
     }
 
-    if (!isSent) sender->GetDevice()->GetTdmaController()->DeletePacketType(p->GetUid());	
 
     // push sending events (this round) into m_TransmissionEvent     
     m_TransmissionEvent.insert (m_TransmissionEvent.end(), tmp_TransmissionEvent.begin(), tmp_TransmissionEvent.end() );

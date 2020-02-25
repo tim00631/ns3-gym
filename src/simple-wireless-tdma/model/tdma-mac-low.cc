@@ -141,9 +141,6 @@ TdmaMacLow::Receive (Ptr<Packet> packet)
 {
   NS_LOG_DEBUG (*packet);
 
-  uint32_t pktSize = packet->GetSize();
-
-  m_device->GetTdmaController()->DeletePacketType(packet->GetUid());
 
   WifiMacHeader hdr;
   packet->RemoveHeader (hdr);
@@ -155,7 +152,6 @@ TdmaMacLow::Receive (Ptr<Packet> packet)
       WifiMacTrailer fcs;
       packet->RemoveTrailer (fcs);
 
-      int64_t start = m_device->GetTdmaController()->GetPacketStart(packet->GetUid());
       m_rxCallback (packet, &hdr);
 
       // check received packet is for me or not
@@ -172,21 +168,6 @@ TdmaMacLow::Receive (Ptr<Packet> packet)
 	  std::string str = s.substr(10);
 	  m_device->GetTdmaController()->UpdateList(str,m_device->GetNode()->GetId());
       }
-      else
-      {
-	  if (!hdr.GetAddr1().IsBroadcast()) 
-      	  {
-  	  	// Calculate Data Successfully bytes
-	      	m_device->GetTdmaController()->AddDataSuccessfulBytes(pktSize);
-	      	//m_device->GetTdmaController()->DeletePacketType(packet->GetUid());
-	      	m_device->GetTdmaController()->DeletePacketStart(packet->GetUid(),Simulator::Now().GetNanoSeconds());
-		
-		//std::cout<< "start: " << start <<", end: " << Simulator::Now().GetNanoSeconds() << std::endl;
-		m_device->GetTdmaController()->AddDelay(Simulator::Now ().GetNanoSeconds () - start);
-	      	m_device->GetTdmaController()->AddpktCount();	
-	 }
-      }
-      
     }
   else
     {

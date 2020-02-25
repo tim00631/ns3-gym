@@ -133,13 +133,7 @@ TdmaController::TdmaController ()
   //LogComponentEnable ("TdmaController", LOG_LEVEL_DEBUG);
   NS_LOG_DEBUG("TdmaController constructor");
 
-  m_tdmaNonDataBytes = 0;
-  m_tdmaTotalBytes = 0;
-  m_tdmaDataSuccessfulBytes = 0;
   m_tdmaDataBytes = 0;
-  m_tdmaDelay = 0;
-  m_pktCount = 0;
-  m_tdmaRemainSlotTime = 0;
 
   for (uint32_t i=0;i<64;i++)
   {
@@ -193,10 +187,7 @@ TdmaController::StartTdmaSessions (void)
 
   ClearTdmaDataSlot();
   
-  printf("Time: %luns, Overhead: %f, Delay: %fns, Throughput: %f B/s, Delivery Ratio: %f\n",Simulator::Now().GetNanoSeconds(),(double)m_tdmaNonDataBytes/m_tdmaTotalBytes,(double)m_tdmaDelay/m_pktCount,
-	 (double)(m_tdmaTotalBytes-m_tdmaNonDataBytes)/(Simulator::Now().GetSeconds()),(double)m_tdmaDataSuccessfulBytes/m_tdmaDataBytes);
-  printf("RemainSlotTime: %lu\n",m_tdmaRemainSlotTime);
-  m_tdmaRemainSlotTime = 0;
+  //printf("Time: %luns, Overhead: %f, Delay: %fns, Throughput: %f B/s, Delivery Ratio: %f\n",Simulator::Now().GetNanoSeconds(),(double)m_tdmaNonDataBytes/m_tdmaTotalBytes,(double)m_tdmaDelay/m_pktCount, (double)(m_tdmaTotalBytes-m_tdmaNonDataBytes)/(Simulator::Now().GetSeconds()),(double)m_tdmaDataSuccessfulBytes/m_tdmaDataBytes);
   std::cout<<"--------------------------Frame Start---------------------------"<<std::endl;
 
   ScheduleTdmaSession (0);
@@ -409,8 +400,6 @@ TdmaController::ScheduleTdmaSession (const uint32_t slotNum)
     {
 	NS_LOG_WARN ("No MAC ptrs in TDMA controller");
 	
-	// Calculate the Remain data slot time	
-	if (!isCtrl) m_tdmaRemainSlotTime+=slotTime.GetMicroSeconds();
     }
   else
    {
@@ -439,11 +428,6 @@ TdmaController::ScheduleTdmaSession (const uint32_t slotNum)
 		it->second[k]->StartTransmission (transmissionSlot.GetMicroSeconds (), isCtrl);
 
     	}
- 	if (it->second.size() == 0 && !isCtrl) 
-	{
-		// Calculate the Remain data slot time	
-		m_tdmaRemainSlotTime+=slotTime.GetMicroSeconds();
-	}	
    }
 
   Time totalTransmissionTimeUs = GetGuardTime () + MicroSeconds (slotTime.GetMicroSeconds () * 1);
@@ -727,63 +711,18 @@ TdmaController::ShiftCtrlSlot (void)
    	  m_slotPtrs.insert (std::make_pair (i,std::vector<Ptr<TdmaMac> >{it_mac->second})); 
 
       }
-
   } 
-
- 
 }
 
 std::vector<std::pair<Ipv4Address, uint32_t>>
 TdmaController::GetTop3QueuePktStatus (uint32_t slotNum)
 {
-
   std::map<uint32_t, std::vector<Ptr<TdmaMac> > >::iterator it = m_slotPtrs.find (slotNum);
 
   NS_ASSERT (it->second[0] != NULL);
   return it->second[0]->GetQueuePktStatus ();
-
-  
 }
 
-
-/*
-  For Calculating kpi
-*/
-void
-TdmaController::AddNonDataBytes( uint64_t bytes )
-{
-  m_tdmaNonDataBytes+=bytes;
-}
-
-uint64_t
-TdmaController::GetNonDataBytes (void)
-{
-  return m_tdmaNonDataBytes;
-}
-
-void 
-TdmaController::AddTotalBytes (uint64_t bytes)
-{
-  m_tdmaTotalBytes+=bytes;
-}
-
-uint64_t
-TdmaController::GetTotalBytes (void)
-{
-  return m_tdmaTotalBytes;
-}
-
-void 
-TdmaController::AddDataSuccessfulBytes (uint64_t bytes)
-{
-  m_tdmaDataSuccessfulBytes+=bytes;
-}
-
-uint64_t
-TdmaController::GetDataSuccessfulBytes (void)
-{
-  return m_tdmaDataSuccessfulBytes;
-}
 
 void 
 TdmaController::AddDataBytes (uint64_t bytes)
@@ -796,117 +735,7 @@ TdmaController::GetDataBytes (void)
 {
   return m_tdmaDataBytes;
 }
-void
-TdmaController::SetPacketType (uint64_t uid, bool type)
-{
-  m_tdmaPacketTypeList.insert(std::make_pair(uid,type));  
-}
 
-bool
-TdmaController::GetPacketType (uint64_t uid)
-{
-  std::map<uint64_t,bool>::iterator it = m_tdmaPacketTypeList.find(uid);
-  if (it != m_tdmaPacketTypeList.end())
-  {
-	return it->second;
-  }
-  else
-  {
-   	//std::cout << "Packet non exist" << std::endl;
-	return false;
-  }
-}
-
-// Decrease the map size
-void
-TdmaController::DeletePacketType (uint64_t uid)
-{
-  std::map<uint64_t,bool>::iterator it = m_tdmaPacketTypeList.find(uid);
-  if (it != m_tdmaPacketTypeList.end())
-  {
-	m_tdmaPacketTypeList.erase(it);
-  }
-}
-
-void
-TdmaController::AddDelay (int64_t delay)
-{
-  //std::cout<<"delayns: " << delay <<std::endl;
-  m_tdmaDelay+=delay;
-}
-
-int64_t
-TdmaController::GetDelay (void)
-{
-  return m_tdmaDelay;
-}
-
-void
-TdmaController::SetPacketStart (uint64_t uid, int64_t time)
-{
-  std::map< uint64_t, int64_t >::iterator it = m_tdmaPacketStartList.find(uid);
-  if (it != m_tdmaPacketStartList.end())
-  {
-	// TODO : calculate the layer 3 delay
-	m_tdmaPacketStartList.erase(it);
-  }
-  m_tdmaPacketStartList.insert(std::make_pair(uid,time));
-}
-
-void
-TdmaController::DeletePacketStart (uint64_t uid, int64_t time)
-{
-  std::map< uint64_t, int64_t >::iterator it = m_tdmaPacketStartList.find(uid);
-  if (it != m_tdmaPacketStartList.end())
-  {
-	if (it->second != time) m_tdmaPacketStartList.erase(it);
-  }
-}
-
-int64_t
-TdmaController::GetPacketStart (uint64_t uid)
-{
-  std::map< uint64_t, int64_t >::iterator it = m_tdmaPacketStartList.find(uid);
-  if (it != m_tdmaPacketStartList.end())
-  {
-	return it->second;
-  }
-  else
-  {
-   	//std::cout << "Packet Start non exist" << std::endl;
-	return 0;
-  }
-}
-
-void
-TdmaController::AddpktCount (void)
-{
-  m_pktCount++;
-}
-
-uint64_t
-TdmaController::GetpktCount (void)
-{
-  return m_pktCount;
-}
-
-void
-TdmaController::AddRemainSlotTime (uint64_t time)
-{
-  m_tdmaRemainSlotTime+=time;
-}
-
-uint64_t
-TdmaController::GetRemainSlotTime (void)
-{
-  return m_tdmaRemainSlotTime;
-}
-
-uint32_t
-TdmaController::GetnNodes()
-{
-  return m_nNodes;
-}
 
 std::vector<std::pair<uint32_t,uint32_t>>
 TdmaController::GetNodeUsedList (uint32_t nodeId)

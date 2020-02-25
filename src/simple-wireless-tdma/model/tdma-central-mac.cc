@@ -305,8 +305,6 @@ TdmaCentralMac::StartTransmission (uint64_t transmissionTimeUs, bool isCtrl)
     {
       NS_LOG_DEBUG ("queue empty");
       
-      // Calculate the Remain data slot time	
-      if (!isCtrl) m_tdmaController->AddRemainSlotTime(totalTransmissionSlot.GetMicroSeconds());
       return;
     }
 
@@ -323,11 +321,6 @@ TdmaCentralMac::StartTransmission (uint64_t transmissionTimeUs, bool isCtrl)
   else
     {
       NS_LOG_DEBUG ("Packet takes more time to transmit than the slot allotted. Will send in next slot");
-      if(!isCtrl) 
-      {
-	// Calculate the Remain data slot time	
-	m_tdmaController->AddRemainSlotTime(totalTransmissionSlot.GetMicroSeconds());
-      } 
     }
 }
 

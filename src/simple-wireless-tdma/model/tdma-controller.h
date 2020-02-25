@@ -138,32 +138,13 @@ public:
 
   void AddNetDevice (uint32_t nodeId,Ptr<TdmaNetDevice> device);
   void SetNodeNum (uint32_t);
-  uint32_t GetnNodes();
   void UpdateList (std::string s, uint32_t NodeId);
   void DeleteTdmaSlot (uint32_t slot, Ptr<TdmaMac> macPtr);
   std::vector<std::pair<uint32_t,uint32_t> > GetNodeUsedList (uint32_t NodeId);
 
-  void AddNonDataBytes (uint64_t bytes);
-  uint64_t GetNonDataBytes (void);
-  void AddTotalBytes (uint64_t bytes);
-  uint64_t GetTotalBytes (void);
-  void AddDataSuccessfulBytes (uint64_t bytes);
-  uint64_t GetDataSuccessfulBytes (void);
   void AddDataBytes (uint64_t bytes);
   uint64_t GetDataBytes (void);
-  void SetPacketType (uint64_t uid, bool type);
-  bool GetPacketType (uint64_t uid);
-  void DeletePacketType (uint64_t uid);
-  void SetPacketStart (uint64_t uid, int64_t time);
-  void DeletePacketStart (uint64_t uid, int64_t time);
-  int64_t GetPacketStart (uint64_t uid);
-  void AddDelay (int64_t delay);
-  int64_t GetDelay (void);
-  void AddpktCount (void);
-  uint64_t GetpktCount (void);
 
-  void AddRemainSlotTime (uint64_t time);
-  uint64_t GetRemainSlotTime (void);
   std::vector<std::pair<Ipv4Address, uint32_t> > GetTop3QueuePktStatus (uint32_t slotNum);
 
 private:
@@ -217,16 +198,7 @@ private:
   std::pair<uint32_t,uint32_t> m_tdmaUsedListPre[64][100]; // store each node's Data slot Used list (previous frame) [nodeId][slotNum].(priority,nodeId)
   int32_t m_tdmaEntrySlotNum[64];
 
-  uint64_t m_tdmaNonDataBytes;
-  uint64_t m_tdmaTotalBytes;
-  uint64_t m_tdmaDataSuccessfulBytes;
   uint64_t m_tdmaDataBytes;
-  std::map<uint64_t,bool> m_tdmaPacketTypeList;
-  std::map<uint64_t,int64_t> m_tdmaPacketStartList;
-  int64_t m_tdmaDelay;
-  uint64_t m_pktCount;
-
-  uint64_t m_tdmaRemainSlotTime;  
 };
 
 } // namespace ns3
