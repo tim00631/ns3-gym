@@ -17,7 +17,8 @@ TdmaGymEnv::TdmaGymEnv ()
   NS_LOG_FUNCTION (this);
   m_slotNum = 0;
   m_stepInterval1 = MicroSeconds(500);
-  m_stepInterval2 = MicroSeconds(1000*100);
+  m_stepInterval2 = MicroSeconds(1000*100 + 500);
+
 
   for (uint32_t i=0;i<NodeList::GetNNodes();i++)
   {
@@ -27,7 +28,7 @@ TdmaGymEnv::TdmaGymEnv ()
 	m_ip2id.insert(std::pair<Ipv4Address,uint32_t>(addr,i));
   }
 
-  Simulator::Schedule (Seconds(0.0), &TdmaGymEnv::ScheduleNextStateRead, this);
+  Simulator::Schedule (NanoSeconds(10.0), &TdmaGymEnv::ScheduleNextStateRead, this);
 
 }
 
@@ -38,6 +39,7 @@ TdmaGymEnv::TdmaGymEnv (Time stepInterval1, Time stepInterval2)
   m_stepInterval1 = stepInterval1;
   m_stepInterval2 = stepInterval2;
 
+
   for (uint32_t i=0;i<NodeList::GetNNodes();i++)
   {
 	Ptr<Node> nodeId = NodeList::GetNode(i);
@@ -46,7 +48,7 @@ TdmaGymEnv::TdmaGymEnv (Time stepInterval1, Time stepInterval2)
 	m_ip2id.insert(std::pair<Ipv4Address,uint32_t>(addr,i));
   }
 
-  Simulator::Schedule (Seconds(0.0), &TdmaGymEnv::ScheduleNextStateRead, this);
+  Simulator::Schedule (NanoSeconds(10.0), &TdmaGymEnv::ScheduleNextStateRead, this);
 
 }
 
@@ -54,7 +56,7 @@ void
 TdmaGymEnv::ScheduleNextStateRead ()
 {
   NS_LOG_FUNCTION (this);
-  if (m_slotNum <64) {
+  if (m_slotNum <63){
   	Simulator::Schedule (m_stepInterval1, &TdmaGymEnv::ScheduleNextStateRead, this);
   }
   else {
@@ -63,7 +65,7 @@ TdmaGymEnv::ScheduleNextStateRead ()
   
   Notify();
   
-  m_slotNum = m_slotNum > 64 ? 0 : m_slotNum+1;
+  m_slotNum = m_slotNum >= 63 ? 0 : m_slotNum+1;
 }
 
 TdmaGymEnv::~TdmaGymEnv ()
@@ -171,12 +173,13 @@ TdmaGymEnv::GetObservation()
 
   Ptr<Node> node = NodeList::GetNode (m_slotNum);
   Ptr<NetDevice> dev = node-> GetDevice(0);
-  Ptr<TdmaNetDevice> tdma_dev = DynamicCast<TdmaNetDevice>(dev);
-  std::vector<std::pair<uint32_t,uint32_t> > nodeUsedList = tdma_dev->GetTdmaController()->GetNodeUsedList(m_slotNum);
+  m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
+
+  std::vector<std::pair<uint32_t,uint32_t> > nodeUsedList = m_tdmaDevice->GetTdmaController()->GetNodeUsedList(m_slotNum);
 
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries() ;
 
-  std::vector<std::pair<Ipv4Address, uint32_t>> top3queuePktStatus = tdma_dev->GetTdmaController()->GetTop3QueuePktStatus(m_slotNum);
+  std::vector<std::pair<Ipv4Address, uint32_t>> top3queuePktStatus = m_tdmaDevice->GetTdmaController()->GetTop3QueuePktStatus(m_slotNum);
 
   for (uint32_t i=0;i<top3queuePktStatus.size();i++)
   {
@@ -193,6 +196,14 @@ TdmaGymEnv::GetObservation()
   int32_t nodeUsedList_top3Pkt[nodeUsedList.size()];
   memset(nodeUsedList_top3Pkt,-1,nodeUsedList.size()*sizeof(int32_t));
 
+  for (uint32_t i=0;i<nodeUsedList.size();i++)
+  {
+	if (nodeUsedList[i].first == 0)
+	{
+		nodeUsedList_top3Pkt[i] = 0;
+	}
+  }
+
   for (uint32_t i=0;i<top3queuePktStatus.size();i++)
   {
 	std::map<Ipv4Address,uint32_t>::iterator it = m_ip2id.find(top3queuePktStatus[i].first);
@@ -201,18 +212,19 @@ TdmaGymEnv::GetObservation()
 	{
 		for (uint32_t j=0;j<nodeUsedList.size();j++)
 		{
-			if(it->second == nodeUsedList[j].second) // node is top 3 
-			{
-				nodeUsedList_top3Pkt[j] = i+1;
-			}
-			else if (nodeUsedList[j].second == 0)
+			if (nodeUsedList[j].first == 0)
 			{
 				nodeUsedList_top3Pkt[j] = 0;
+			}
+			else if(it->second == nodeUsedList[j].second && nodeUsedList[j].first != 0) // node is top 3 
+			{
+				nodeUsedList_top3Pkt[j] = i+1;
 			}
 		}
 	}
 
   }
+
 
   uint32_t dataSlotNum = 100;
   std::vector<uint32_t> shape = {dataSlotNum,};
@@ -220,8 +232,10 @@ TdmaGymEnv::GetObservation()
 
   for (uint32_t i=0;i<nodeUsedList.size();i++)
   {
-	slotUsedTable_box->AddValue (nodeUsedList_top3Pkt[i]);
+	//slotUsedTable_box->AddValue (nodeUsedList_top3Pkt[i]);
+	slotUsedTable_box->AddValue (nodeUsedList[i].second);
   }
+
 
   std::vector<uint32_t> shape2 = {3,};
   Ptr<OpenGymBoxContainer<uint32_t>> pktBytes_box = CreateObject<OpenGymBoxContainer<uint32_t> >(shape2);
@@ -264,7 +278,7 @@ std::string
 TdmaGymEnv::GetExtraInfo()
 {
   NS_LOG_FUNCTION (this);
-  std::string Info = "testInfo";
+  std::string Info = std::to_string(m_slotNum);
   NS_LOG_UNCOND("MyGetExtraInfo: " << Info);
   return Info;
 }
@@ -277,6 +291,22 @@ bool
 TdmaGymEnv::ExecuteActions(Ptr<OpenGymDataContainer> action)
 {
   NS_LOG_FUNCTION (this);
+  NS_LOG_UNCOND ("ExecuteActions: " << action);
+
+  uint32_t max_slots = 3;
+
+  Ptr<OpenGymBoxContainer<int32_t> > box = DynamicCast<OpenGymBoxContainer<int32_t> >(action);
+
+  for (uint32_t i=0;i<max_slots;i++)
+  {
+	if (box->GetValue(i) != -1)
+	{
+		m_tdmaDevice->GetTdmaController()->SetRLAction(box->GetValue(i));
+	}
+
+  }  
+
+  m_tdmaDevice->GetTdmaController()->SendUsed(m_tdmaDevice);
   return true;
 }
 

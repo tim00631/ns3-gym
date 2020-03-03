@@ -146,6 +146,8 @@ public:
   uint64_t GetDataBytes (void);
 
   std::vector<std::pair<Ipv4Address, uint32_t> > GetTop3QueuePktStatus (uint32_t slotNum);
+  void SetRLAction (uint32_t slotNum);
+  void SendUsed (Ptr<TdmaNetDevice> device);
 
 private:
   static Time GetDefaultSlotTime (void);
@@ -159,7 +161,6 @@ private:
   bool IsBusy (void) const;
   void UpdateFrameLength (void);
   void ScheduleTdmaSession (const uint32_t slotNum);
-  void SendUsed (Ptr<TdmaNetDevice> device);
   void ShiftCtrlSlot(void);
   void ShiftCtrlSlotMap(void);
   uint32_t GetCtrlNode (uint32_t slotNum);
@@ -199,6 +200,9 @@ private:
   int32_t m_tdmaEntrySlotNum[64];
 
   uint64_t m_tdmaDataBytes;
+
+  std::vector<uint32_t> m_tdmaRLAction;
+
 };
 
 } // namespace ns3

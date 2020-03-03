@@ -183,12 +183,12 @@ TdmaController::StartTdmaSessions (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  RotateUsedList();
+  //RotateUsedList();
 
   ClearTdmaDataSlot();
   
   //printf("Time: %luns, Overhead: %f, Delay: %fns, Throughput: %f B/s, Delivery Ratio: %f\n",Simulator::Now().GetNanoSeconds(),(double)m_tdmaNonDataBytes/m_tdmaTotalBytes,(double)m_tdmaDelay/m_pktCount, (double)(m_tdmaTotalBytes-m_tdmaNonDataBytes)/(Simulator::Now().GetSeconds()),(double)m_tdmaDataSuccessfulBytes/m_tdmaDataBytes);
-  std::cout<<"--------------------------Frame Start---------------------------"<<std::endl;
+  std::cout<<"--------------------------Frame Start : "<< Simulator::Now().GetNanoSeconds() <<"ns ---------------------------"<<std::endl;
 
   ScheduleTdmaSession (0);
   
@@ -395,6 +395,8 @@ TdmaController::ScheduleTdmaSession (const uint32_t slotNum)
   {
 	slotTime = GetSlotTime();
   }
+
+  if (slotNum == m_nNodes) RotateUsedList();
   
   if (it == m_slotPtrs.end ()) // check the current slot is used by any nodes or not
     {
@@ -417,7 +419,7 @@ TdmaController::ScheduleTdmaSession (const uint32_t slotNum)
 			{
 				if ( slotNum < m_nNodes  ) // Control slot
 				{
-					SendUsed(it_status->second);
+					//SendUsed(it_status->second);
 				}
 			}
 		}
@@ -482,7 +484,7 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   }
 
 
-
+/*
   // Search unused slot from UsedList
   std::vector<uint32_t> candidateList_unused;
   std::vector<uint32_t> candidateList_priority;
@@ -547,19 +549,27 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   
 	
 	sort(unusedList_select.begin(),unusedList_select.end());
-  }	
-  uint32_t counter = 0;
+  }
 
-  // Get node mac for Add/Delete controller slot map
-  std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(device->GetNode()->GetId());
+
+
+  uint32_t priority = rand() % 3 + 1;
+  uint32_t num = 0;//rand() % 4; // Num of slot the node need to use (0~3)
+  std::vector<uint32_t> unusedList_select;
+*/
+
+  sort(m_tdmaRLAction.begin(),m_tdmaRLAction.end());
+  uint32_t counter = 0;
 
   // Use the unused slot in unusedList_select
   for (uint32_t i=0;i<100;i++)
   {
-	if ( counter < num && i == unusedList_select[counter] ) 
+	//if ( counter < num && i == unusedList_select[counter] ) 
+	if ( counter < m_tdmaRLAction.size() && i == m_tdmaRLAction[counter] ) 
 	{
 		// Choose a unused slot
-		m_tdmaUsedListCur[device->GetNode()->GetId()][i] = std::make_pair(priority,device->GetNode()->GetId());
+		//m_tdmaUsedListCur[device->GetNode()->GetId()][i] = std::make_pair(priority,device->GetNode()->GetId());
+		m_tdmaUsedListCur[device->GetNode()->GetId()][i] = std::make_pair(1,device->GetNode()->GetId());
 		//printf("Send:%d node use slot %d\n",(m_tdmaUsedListCur[device->GetNode()->GetId()][i].second),i);
 		counter++;
 	}
@@ -567,9 +577,14 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   }
   msg << '\0';
 
+  m_tdmaRLAction.clear();
+
   // Broadcast previous/current UsedList
   Ptr<Packet> packet = Create<Packet> ((uint8_t*) msg.str().c_str(), msg.str().length() + 1);	
   device->SendbyMac(packet,Mac48Address::GetBroadcast(),0);
+
+  // Get node mac for Add/Delete controller slot map
+  std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(device->GetNode()->GetId());
 
   // Update the tdma slot map
   for (uint32_t i=0;i<100;i++)
@@ -747,6 +762,12 @@ TdmaController::GetNodeUsedList (uint32_t nodeId)
   }
 
   return nodeUsedList;
+}
+
+void
+TdmaController::SetRLAction(uint32_t slotNum)
+{
+  m_tdmaRLAction.push_back(slotNum);
 }
 
 } // namespace ns3

@@ -44,7 +44,7 @@ try:
         if done:
             break
 
-        if stepIdx == 20 :
+        if stepIdx == 100 :
             break
 
 except KeyboardInterrupt:

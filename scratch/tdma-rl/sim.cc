@@ -141,7 +141,7 @@ int main (int argc, char **argv)
   uint32_t pktNum = 1;
   double pktInterval = 1.0;
   uint32_t simSeed = 0;
-  srand(30000);
+  //srand(30000);
 
   CommandLine cmd;
   cmd.AddValue ("nWifis", "Number of wifi nodes[Default:30]", nWifis);
@@ -320,14 +320,15 @@ TdmaExample::CaseRun (uint32_t nWifis, uint32_t Sink, double totalTime, std::str
   ss3 << txpDistance;
   std::string t_txpDistance = ss3.str ();
 
-  Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (openGymPort);
-  Ptr<TdmaGymEnv> tdmaGymEnv = CreateObject<TdmaGymEnv> ();
-  tdmaGymEnv->SetOpenGymInterface(openGymInterface);
-
   CreateNodes ();
   CreateDevices (txpDistance);
   SetupMobility ();
   InstallInternetStack ();
+
+  Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (openGymPort);
+  Ptr<TdmaGymEnv> tdmaGymEnv = CreateObject<TdmaGymEnv> ();
+  tdmaGymEnv->SetOpenGymInterface(openGymInterface);
+
   
   InstallApplications (selfGenerate);
 

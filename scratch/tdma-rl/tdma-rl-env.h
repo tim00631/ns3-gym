@@ -43,6 +43,7 @@ public:
 private:
   void ScheduleNextStateRead ();
 
+  Ptr<TdmaNetDevice> m_tdmaDevice;
   uint32_t m_slotNum;
   std::map<Ipv4Address,uint32_t> m_ip2id; // Convert ipv4 to nodeId 
   Time m_stepInterval1; // skip to next ctrl slot (ctrl slot size)
