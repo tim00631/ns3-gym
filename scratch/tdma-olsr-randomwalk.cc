@@ -51,31 +51,6 @@ using namespace ns3;
 uint16_t port = 8080;
 
 NS_LOG_COMPONENT_DEFINE ("TdmaExample");
-/*
-void 
-GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
-                             uint32_t remainTransmit, Time pktInterval , uint32_t pktNum)
-{
-  if (remainTransmit > 0)
-    {
-      	std::ostringstream msg; msg << "Hello World!" << '\0';
-	Ptr<Packet> packet = Create<Packet> ((uint8_t*) msg.str().c_str(), pktSize);
-   
-	for (uint32_t i=0;i<pktNum;i++)
-	{
-      			socket->Send (packet);
-	}
-	
-      	Simulator::Schedule (pktInterval, &GenerateTraffic,
-                           socket, pktSize,remainTransmit - 1, pktInterval, pktNum);
-    }
-  else
-    {
-      socket->Close ();
-    }
-}
-
-*/
 
 
 class TdmaExample
@@ -149,7 +124,7 @@ int main (int argc, char **argv)
   std::string appl = "all";
   uint32_t periodicUpdateInterval = 15;
   uint32_t settlingTime = 6;
-  double dataStart = 10.0;
+  double dataStart = 5.0;
   double txpDistance = 1000.0;
   bool selfGenerate = true;
 
@@ -161,7 +136,7 @@ int main (int argc, char **argv)
   uint32_t pktNum = 1;
   double pktInterval = 1.0;
 
-  srand(30000);
+  srand(10000);
 
   CommandLine cmd;
   cmd.AddValue ("nWifis", "Number of wifi nodes[Default:30]", nWifis);
@@ -181,7 +156,7 @@ int main (int argc, char **argv)
   cmd.AddValue ("pktInterval","Time between two packet stream",pktInterval);
   cmd.Parse (argc, argv);
   
-  SeedManager::SetSeed (2321);
+  SeedManager::SetSeed (1234);
 
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", StringValue ("1000")); // bytes!
   Config::SetDefault ("ns3::OnOffApplication::DataRate", StringValue (rate));
@@ -220,15 +195,10 @@ void
 TdmaExample::GetModelData (Ptr<Node> node)
 {
   
-  Ptr<NetDevice> dev = node->GetDevice(0);
-  Ptr<TdmaNetDevice> tdma_dev = DynamicCast<TdmaNetDevice>(dev);
-  std::vector<std::pair<uint32_t,uint32_t> > nodeUsedList = tdma_dev->GetTdmaController()->GetNodeUsedList(1);
+  //Ptr<NetDevice> dev = node->GetDevice(0);
+  //Ptr<TdmaNetDevice> tdma_dev = DynamicCast<TdmaNetDevice>(dev);
+  //std::vector<std::pair<uint32_t,uint32_t> > nodeUsedList = tdma_dev->GetTdmaController()->GetNodeUsedList(1);
   
-  std::cout<<"UsedList:" <<std::endl;
-  for(uint32_t i=0;i<nodeUsedList.size();i++)
-  {
-    std::cout<<"idx:"<<i<<" : ("<<nodeUsedList[i].first << "," << nodeUsedList[i].second <<")" <<std::endl;
-  }
 /*
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries() ;
   std::cout<<"RoutingTable"<<std::endl;
