@@ -103,6 +103,7 @@ public:
   void RequestForChannelAccess (void);
   virtual void FlushQueue (void) const;
   virtual std::vector<std::pair<Ipv4Address,uint32_t>> GetQueuePktStatus (void) const;
+  virtual uint32_t GetQueuingBytes (void) const;
 
 private:
   void Receive (Ptr<Packet> packet, const WifiMacHeader *hdr);

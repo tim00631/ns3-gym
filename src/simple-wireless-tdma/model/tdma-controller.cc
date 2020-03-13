@@ -127,7 +127,13 @@ TdmaController::TdmaController ()
 		m_totalSlotsAllowed (10000),
 		m_activeEpoch (false),
 		m_tdmaMode (CENTRALIZED),
-    m_channel (0)
+    m_channel (0),
+    m_usedslotPenalty (-100),
+    m_collisionPenalty (-2),
+    m_exhaustedslotPenalty (-10),
+    m_queuingPenalty (-3),
+    m_delayReward (10),
+    m_queuingBytesThreshold (GetSlotTime()*GetDataRate() / 8 * (1/3))
 {
   NS_LOG_FUNCTION (this);
   //LogComponentEnable ("TdmaController", LOG_LEVEL_DEBUG);
@@ -155,6 +161,9 @@ TdmaController::TdmaController ()
 		m_tdmaUsedListCur[i][j] = std::make_pair(0,0);
 	}
   }
+
+  memset(m_rlReward,0,64*sizeof(int32_t));
+  
 
   // random backoff 
   //srand( 30000 );
@@ -419,7 +428,7 @@ TdmaController::ScheduleTdmaSession (const uint32_t slotNum)
 			{
 				if ( slotNum < m_nNodes  ) // Control slot
 				{
-					SendUsed(it_status->second);
+					//SendUsed(it_status->second);
 				}
 			}
 		}
@@ -476,6 +485,7 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
 {
   std::ostringstream msg;  msg << "#TDMAUSED#";
 
+  //uint32_t unusedSlot_counter = 0;
 
   // Send previous frame's UsedList to avoid the hidden nodes problem
   for (uint32_t i=0;i<100;i++)
@@ -490,7 +500,7 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   }
 
    
-  
+  /*
   // Search unused slot from UsedList
   std::vector<uint32_t> candidateList_unused;
   std::vector<uint32_t> unusedList_select;
@@ -507,7 +517,7 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   	
   	for (uint32_t i=0;i<100;i++)
   	{
-		if ((m_tdmaUsedListCur[device->GetNode()->GetId()][i].first ) == 0 ) // Check the Used bits in the list
+		if ((m_tdmaUsedListCur[device->GetNode()->GetId()][i].first ) == 0 ) // Slot is unused
 		{
       candidateList_unused.push_back(i);
 		}
@@ -532,23 +542,50 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
 	sort(unusedList_select.begin(),unusedList_select.end());
   }
   
+  */
 
 
+  // If packet bytes in queue > threshold, but run out of slots
+  /*
+  for (uint32_t i=0;i<100;i++)
+  {
+    if ((m_tdmaUsedListCur[device->GetNode()->GetId()][i].first ) == 0 ) // Slot is unused
+      unusedSlot_counter++;
+  }
+  
+  if (unusedSlot_counter == 0 && GetQueuingBytes(device->GetNode()->GetId()) > m_queuingBytesThreshold)
+  {
+    
+  }
+  */
 
   //sort(m_tdmaRLAction.begin(),m_tdmaRLAction.end());
   uint32_t counter = 0;
 
+  // If packet bytes in queue > threshold, but choose slot not enough
+  if (GetQueuingBytes(device->GetNode()->GetId()) > m_queuingBytesThreshold && m_tdmaRLAction.size() == 0 )
+  {
+    m_rlReward[device->GetNode()->GetId()] += m_queuingPenalty;
+  }
+
   // Use the unused slot in unusedList_select
   for (uint32_t i=0;i<100;i++)
   {
-	if ( counter < num && i == unusedList_select[counter] ) 
-	//if ( counter < m_tdmaRLAction.size() && i == m_tdmaRLAction[counter] ) 
+	//if ( counter < num && i == unusedList_select[counter] ) 
+	if ( counter < m_tdmaRLAction.size() && i == m_tdmaRLAction[counter] ) 
 	{
+    if (m_tdmaUsedListCur[device->GetNode()->GetId()][i].first != 0)
+    {
+      m_rlReward[device->GetNode()->GetId()] += m_usedslotPenalty;
+    }
+      
+
 		// Choose a unused slot
-		m_tdmaUsedListCur[device->GetNode()->GetId()][i] = std::make_pair(hops,device->GetNode()->GetId());
-		//m_tdmaUsedListCur[device->GetNode()->GetId()][i] = std::make_pair(1,device->GetNode()->GetId());
+		//m_tdmaUsedListCur[device->GetNode()->GetId()][i] = std::make_pair(hops,device->GetNode()->GetId());
+		m_tdmaUsedListCur[device->GetNode()->GetId()][i] = std::make_pair(1,device->GetNode()->GetId());
 		//printf("Send:%d node use slot %d\n",(m_tdmaUsedListCur[device->GetNode()->GetId()][i].second),i);
 		counter++;
+    
   }
 	if (m_tdmaUsedListCur[device->GetNode()->GetId()][i].first != 0 && m_tdmaUsedListCur[device->GetNode()->GetId()][i].second != device->GetNode()->GetId())
 	  msg << m_tdmaUsedListCur[device->GetNode()->GetId()][i].first+1 << std::setfill('0') << std::setw(2) << m_tdmaUsedListCur[device->GetNode()->GetId()][i].second;
@@ -607,6 +644,7 @@ TdmaController::UpdateList (std::string s, uint32_t nodeId)
 		{
 			m_tdmaUsedListPre[nodeId][i/3] = std::make_pair(hops,slot_nodeId);
 			DeleteTdmaSlot(i/3+64,it_mac->second); 
+      m_rlReward[nodeId] += m_collisionPenalty;
 			//printf("Node %d,delete previous frame:%d use slot %d, this slot is for Node %d\n",nodeId,nodeId,i/3,slot_nodeId);
 		}
      
@@ -626,6 +664,7 @@ TdmaController::UpdateList (std::string s, uint32_t nodeId)
 		else if ( hops != 0 && m_tdmaUsedListCur[nodeId][i/3-100].second == nodeId && slot_nodeId != nodeId )
 		{
 			m_tdmaUsedListCur[nodeId][i/3-100] = std::make_pair(hops,slot_nodeId);
+      m_rlReward[nodeId] += m_collisionPenalty;
 			//printf("Node %d,delete:%d use slot %d, this slot is for Node %d\n",nodeId,nodeId,i/3-100,slot_nodeId);
 		}
     
@@ -717,14 +756,22 @@ TdmaController::ShiftCtrlSlot (void)
 }
 
 std::vector<std::pair<Ipv4Address, uint32_t>>
-TdmaController::GetTop3QueuePktStatus (uint32_t slotNum)
+TdmaController::GetTop3QueuePktStatus (uint32_t nodeId)
 {
-  std::map<uint32_t, std::vector<Ptr<TdmaMac> > >::iterator it = m_slotPtrs.find (slotNum);
+  std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(nodeId);
 
-  NS_ASSERT (it->second[0] != NULL);
-  return it->second[0]->GetQueuePktStatus ();
+  NS_ASSERT (it_mac != m_id2mac.end());
+  return it_mac->second->GetQueuePktStatus ();
 }
 
+uint32_t
+TdmaController::GetQueuingBytes (uint32_t nodeId)
+{
+  std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(nodeId);
+
+  NS_ASSERT (it_mac != m_id2mac.end());
+  return it_mac->second->GetQueuingBytes ();
+}
 
 void 
 TdmaController::AddDataBytes (uint64_t bytes)
@@ -755,6 +802,24 @@ void
 TdmaController::SetRLAction(uint32_t slotNum)
 {
   m_tdmaRLAction.push_back(slotNum);
+}
+
+void
+TdmaController::AddRLReward(float reward, uint32_t nodeId)
+{
+  m_rlReward[nodeId] += reward;
+}
+
+float
+TdmaController::GetRLReward(uint32_t nodeId)
+{
+  return m_rlReward[nodeId];
+}
+
+void
+TdmaController::ResetRLReward(uint32_t nodeId)
+{
+  m_rlReward[nodeId] = 0;
 }
 
 } // namespace ns3

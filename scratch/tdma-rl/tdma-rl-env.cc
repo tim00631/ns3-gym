@@ -266,7 +266,14 @@ float
 TdmaGymEnv::GetReward()
 {
   NS_LOG_FUNCTION (this);
-  static float reward = 0.0;
+
+  Ptr<Node> node = NodeList::GetNode (m_slotNum);
+  Ptr<NetDevice> dev = node-> GetDevice(0);
+  m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
+
+  float reward = m_tdmaDevice->GetTdmaController()->GetRLReward(m_slotNum);
+  m_tdmaDevice->GetTdmaController()->ResetRLReward(m_slotNum);
+  
   return reward;
 
 }

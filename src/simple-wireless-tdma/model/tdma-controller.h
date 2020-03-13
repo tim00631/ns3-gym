@@ -145,9 +145,14 @@ public:
   void AddDataBytes (uint64_t bytes);
   uint64_t GetDataBytes (void);
 
-  std::vector<std::pair<Ipv4Address, uint32_t> > GetTop3QueuePktStatus (uint32_t slotNum);
+  std::vector<std::pair<Ipv4Address, uint32_t> > GetTop3QueuePktStatus (uint32_t nodeId);
+  uint32_t GetQueuingBytes (uint32_t nodeId);
+
   void SetRLAction (uint32_t slotNum);
   void SendUsed (Ptr<TdmaNetDevice> device);
+  void AddRLReward(float reward, uint32_t nodeId);
+  float GetRLReward(uint32_t nodeId);
+  void ResetRLReward(uint32_t nodeId);
 
 private:
   static Time GetDefaultSlotTime (void);
@@ -202,7 +207,14 @@ private:
   uint64_t m_tdmaDataBytes;
 
   std::vector<uint32_t> m_tdmaRLAction;
+  float m_rlReward[64];
+  int32_t m_usedslotPenalty; // Choose the slot is used
+  int32_t m_collisionPenalty; // Chosen slot is already used by hidden node
+  int32_t m_exhaustedslotPenalty; // Packet bytes in queue > threshold, but run out of slots
+  int32_t m_queuingPenalty; // Packet bytes in queue > threshold, but choose slot not enough
+  int32_t m_delayReward; // Shortest path remain hops > transmission total frame
 
+  uint32_t m_queuingBytesThreshold;
 };
 
 } // namespace ns3

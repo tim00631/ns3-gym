@@ -78,6 +78,7 @@ TdmaMacQueue::TdmaMacQueue ()
   m_count[0] = 0;
   m_size[1] = 0;
   m_count[1] = 0;
+  m_queuingBytes = 0;
 //  LogComponentEnable ("TdmaMacQueue", LOG_LEVEL_DEBUG);
 }
 
@@ -162,8 +163,11 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
   {
   	if (m_size[0] == m_maxSize) return false;
   	isCtrl = false;
+    m_queuingBytes += packet->GetSize ();
   }
   
+  
+
   m_queue[isCtrl].push_back (Item (packet, hdr, now));
   m_size[isCtrl]++;
   NS_LOG_DEBUG ("Inserted packet of size: " << packet->GetSize ()
@@ -197,6 +201,8 @@ TdmaMacQueue::Cleanup (bool isCtrl)
                                                         << " count:" << m_count[isCtrl]);
           m_txDropCallback (i->packet);
           i = m_queue[isCtrl].erase (i);
+          if(!isCtrl) 
+            m_queuingBytes -= i->packet->GetSize ();
           n++;
         }
     }
@@ -215,6 +221,8 @@ TdmaMacQueue::Dequeue (WifiMacHeader *hdr, bool isCtrl)
       Item i = m_queue[isCtrl].front ();
       m_queue[isCtrl].pop_front ();
       m_size[isCtrl]--;
+      if(!isCtrl) 
+        m_queuingBytes -= i.packet->GetSize ();
       *hdr = i.hdr;
       NS_LOG_DEBUG ("Dequeued packet of size: " << i.packet->GetSize ());
       return i.packet;
@@ -258,6 +266,7 @@ TdmaMacQueue::Flush (void)
   m_queue[1].erase (m_queue[1].begin (), m_queue[1].end ());
   m_size[0] = 0;
   m_size[1] = 0;
+  m_queuingBytes = 0;
 }
 
 Mac48Address
@@ -288,6 +297,8 @@ TdmaMacQueue::Remove (Ptr<const Packet> packet, bool isCtrl)
         {
           m_queue[isCtrl].erase (it);
           m_size[isCtrl]--;
+          if(!isCtrl)
+            m_queuingBytes -= it->packet->GetSize ();
           return true;
         }
     }
@@ -335,6 +346,12 @@ TdmaMacQueue::GetPktStatus ()
   
 
   return top3queuePktStatus;
+}
+
+uint32_t
+TdmaMacQueue::GetQueuingBytes (void)
+{
+  return m_queuingBytes;
 }
 
 } // namespace ns3

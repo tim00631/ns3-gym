@@ -40,6 +40,7 @@ try:
 
         print("Step: ", stepIdx)
         print("---obs, reward, done, info: ", obs, reward, done, info)
+        
 
         if done:
             break

@@ -426,4 +426,10 @@ TdmaCentralMac::GetQueuePktStatus (void) const
 
 }
 
+uint32_t 
+TdmaCentralMac::GetQueuingBytes (void) const
+{
+  return m_queue->GetQueuingBytes();
+}
+
 } // namespace ns3

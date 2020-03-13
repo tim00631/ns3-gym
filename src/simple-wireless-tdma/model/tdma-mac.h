@@ -160,6 +160,7 @@ public:
   virtual void Initialize () = 0;
   virtual void FlushQueue(void) const = 0;
   virtual std::vector<std::pair<Ipv4Address,uint32_t>> GetQueuePktStatus (void) const = 0;
+  virtual uint32_t GetQueuingBytes (void) const = 0;
 private:
   static Time GetDefaultMaxPropagationDelay (void);
   Time m_maxPropagationDelay;
