@@ -309,6 +309,7 @@ std::vector<std::pair<Ipv4Address,uint32_t>>
 TdmaMacQueue::GetPktStatus ()
 {
   std::vector<std::pair<Ipv4Address,uint32_t>> queuePktStatus;
+  //std::vector<std::pair<Ipv4Address,uint32_t>> queuePktStatus{std::pair<Ipv4Address,uint32_t>(Ipv4Address("10.1.1.1"),500)};
   
   LlcSnapHeader h;
   Ipv4Header iph;
@@ -321,18 +322,26 @@ TdmaMacQueue::GetPktStatus ()
 	Ptr<Packet> copy = it->packet->Copy();
   	copy->RemoveHeader(h);
  	copy->RemoveHeader (iph);
-	for (uint32_t i=0;i<queuePktStatus.size();i++)
-	{
-		if (queuePktStatus[i].first == iph.GetDestination()) 
-		{
-			queuePktStatus[i].second += iph.GetPayloadSize();
-			break;
-		}
-		else if (i == queuePktStatus.size()-1)
-		{
-			queuePktStatus.push_back(std::pair<Ipv4Address,uint32_t> (iph.GetDestination(),iph.GetPayloadSize()));
-		}
-	}
+    
+    if (queuePktStatus.size() == 0)
+    {
+        queuePktStatus.push_back(std::pair<Ipv4Address,uint32_t> (iph.GetDestination(),iph.GetPayloadSize()));
+    }
+    else
+    {
+        for (uint32_t i=0;i<queuePktStatus.size();i++)
+        {
+            if (queuePktStatus[i].first == iph.GetDestination()) 
+            {
+                queuePktStatus[i].second += iph.GetPayloadSize();
+                break;
+            }
+            else if (i == queuePktStatus.size()-1)
+            {
+                queuePktStatus.push_back(std::pair<Ipv4Address,uint32_t> (iph.GetDestination(),iph.GetPayloadSize()));
+            }
+        }
+    }
     }
   }
 
@@ -346,6 +355,7 @@ TdmaMacQueue::GetPktStatus ()
   
 
   return top3queuePktStatus;
+  //return queuePktStatus;
 }
 
 uint32_t

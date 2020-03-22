@@ -129,7 +129,7 @@ int main (int argc, char **argv)
   std::string appl = "all";
   uint32_t periodicUpdateInterval = 15;
   uint32_t settlingTime = 6;
-  double dataStart = 10.0;
+  double dataStart = 5.0;
   double txpDistance = 1000.0;
   bool selfGenerate = true;
 
@@ -138,8 +138,8 @@ int main (int argc, char **argv)
   uint32_t slotTime = 1000 * 8 / 8000 * 1000000; // us
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
-  uint32_t pktNum = 1;
-  double pktInterval = 1.0;
+  uint32_t pktNum = 10;
+  double pktInterval = 0.1;
   uint32_t simSeed = 0;
   //srand(30000);
 
