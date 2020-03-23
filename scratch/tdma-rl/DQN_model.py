@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras import layers
-from tensorflow.python.keras.optimizers import RMSprop
+from tensorflow.keras.optimizers import RMSprop
 
 
 class Eval_Model(tf.keras.Model):
@@ -76,7 +76,7 @@ class DeepQNetwork:
 
     def choose_action(self, observation):
         # to have batch dimension when feed into tf placeholder
-        observation = observation[np.newaxis, :]
+        #observation = observation[np.newaxis, :]
 
         if np.random.uniform() < self.epsilon:
             # forward feed the observation and get q value for every actions

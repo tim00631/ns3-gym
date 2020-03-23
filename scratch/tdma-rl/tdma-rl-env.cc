@@ -159,6 +159,11 @@ TdmaGymEnv::GetGameOver()
   // Collision more than 3 times
   
   bool isGameOver = false;
+  if (Simulator::Now ().GetSeconds () > Seconds(600))
+  {
+      isGameOver = true;
+  } 
+  
   return isGameOver;
 }
 
