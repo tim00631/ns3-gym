@@ -769,7 +769,7 @@ TdmaController::GetQueuingBytes (uint32_t nodeId)
 {
   std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(nodeId);
 
-  NS_ASSERT (it_mac != m_id2mac.end());
+  NS_ASSERT (it_mac != m_id2mac.end()); 
   return it_mac->second->GetQueuingBytes ();
 }
 

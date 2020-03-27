@@ -97,11 +97,11 @@ Ptr<OpenGymSpace>
 TdmaGymEnv::GetActionSpace()
 {
   // output : Data slot number
-  uint32_t max_slots = 3; // the max slots the node could choose
+  uint32_t slotRange = 100; // the range of slot number the node could choose
 
-  float low = -1;
+  float low = 0;
   float high = 99;
-  std::vector<uint32_t> shape = {max_slots,};
+  std::vector<uint32_t> shape = {slotRange,};
   std::string dtype = TypeNameGet<int32_t> ();
 
   Ptr<OpenGymBoxSpace> box = CreateObject<OpenGymBoxSpace> (low, high, shape, dtype);
@@ -132,7 +132,7 @@ TdmaGymEnv::GetObservationSpace()
 
   float low2 = 0;
   float high2 = 2000;
-  std::vector<uint32_t> shape2 = {topNkinds, };
+  std::vector<uint32_t> shape2 = {topNkinds+1, };
   std::string dtype2 = TypeNameGet<uint32_t> ();
 
   Ptr<OpenGymBoxSpace> pktBytes_box = CreateObject<OpenGymBoxSpace> (low2, high2, shape2, dtype2);
@@ -156,9 +156,11 @@ bool
 TdmaGymEnv::GetGameOver()
 {
   NS_LOG_FUNCTION (this);
-  // Collision more than 3 times
+
   
   bool isGameOver = false;
+  
+  // Time up
   if (Simulator::Now ().GetSeconds () > Seconds(600))
   {
       isGameOver = true;
@@ -185,6 +187,10 @@ TdmaGymEnv::GetObservation()
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries() ;
 
   std::vector<std::pair<Ipv4Address, uint32_t>> top3queuePktStatus = m_tdmaDevice->GetTdmaController()->GetTop3QueuePktStatus(m_slotNum);
+
+  uint32_t queuingBytes = m_tdmaDevice->GetTdmaController()->GetQueuingBytes(m_slotNum);
+  //uint32_t queuingBytes = 50;
+  
 
   for (uint32_t i=0;i<top3queuePktStatus.size();i++)
   {
@@ -237,14 +243,16 @@ TdmaGymEnv::GetObservation()
 
   for (uint32_t i=0;i<nodeUsedList.size();i++)
   {
-	//slotUsedTable_box->AddValue (nodeUsedList_top3Pkt[i]);
-	slotUsedTable_box->AddValue (nodeUsedList[i].second);
+	slotUsedTable_box->AddValue (nodeUsedList_top3Pkt[i]);
+	//slotUsedTable_box->AddValue (nodeUsedList[i].second);
   }
 
 
-  std::vector<uint32_t> shape2 = {3,};
+  std::vector<uint32_t> shape2 = {3+1,};
   Ptr<OpenGymBoxContainer<uint32_t>> pktBytes_box = CreateObject<OpenGymBoxContainer<uint32_t> >(shape2);
 
+
+  pktBytes_box->AddValue (queuingBytes);
   for (uint32_t i=0;i<top3queuePktStatus.size();i++)
   {
 	pktBytes_box->AddValue (top3queuePktStatus[i].second);
@@ -304,7 +312,7 @@ TdmaGymEnv::ExecuteActions(Ptr<OpenGymDataContainer> action)
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_UNCOND ("ExecuteActions: " << action);
-
+   
   uint32_t max_slots = 3;
 
   Ptr<OpenGymBoxContainer<int32_t> > box = DynamicCast<OpenGymBoxContainer<int32_t> >(action);

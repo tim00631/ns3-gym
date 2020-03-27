@@ -31,10 +31,11 @@ class Target_Model(tf.keras.Model):
 
 
 class DeepQNetwork:
-    def __init__(self, n_actions, n_states, eval_model, target_model, learning_rate, reward_decay, e_greedy, replace_target_iter, memory_size, batch_size):
+    def __init__(self, n_actions, n_max_chosen, n_states, eval_model, target_model, learning_rate, reward_decay, e_greedy, replace_target_iter, memory_size, batch_size):
 
         self.params = {
             'n_actions': n_actions,
+            'n_max_chosen': n_max_chosen,
             'n_states': n_states,
             'learning_rate': learning_rate,
             'reward_decay': reward_decay,
@@ -76,15 +77,20 @@ class DeepQNetwork:
 
     def choose_action(self, observation):
         # to have batch dimension when feed into tf placeholder
-        #observation = observation[np.newaxis, :]
+        observation = observation[np.newaxis, :]
+
 
         if np.random.uniform() < self.epsilon:
             # forward feed the observation and get q value for every actions
-            actions_value = self.eval_model.predict(observation)
-            print(actions_value)
-            action = np.argmax(actions_value)
+            actions_value = self.eval_model.predict(observation)[0]
+
+            #action = np.argmax(actions_value)
+            
+            # return the top N action, and then using queuing bytes to decide 
+            action_unsort = np.argpartition(actions_value,-self.params['n_max_chosen'])[-self.params['n_max_chosen']:]
+            action = action_unsort[np.argsort(actions_value[action_unsort])]
         else:
-            action = np.random.randint(0, self.params['n_actions'])
+            action = np.random.choice(self.params['n_actions'],self.params['n_max_chosen'],replace=False)
         return action
 
     def learn(self):
