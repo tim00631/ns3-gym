@@ -150,8 +150,7 @@ public:
 
   void SetRLAction (uint32_t slotNum);
   void SendUsed (Ptr<TdmaNetDevice> device);
-  void AddRLReward(float reward, uint32_t nodeId);
-  float GetRLReward(uint32_t nodeId);
+  float* GetRLReward(uint32_t nodeId);
   void ResetRLReward(uint32_t nodeId);
 
 private:
@@ -207,7 +206,7 @@ private:
   uint64_t m_tdmaDataBytes;
 
   std::vector<uint32_t> m_tdmaRLAction;
-  float m_rlReward[64];
+  float m_rlReward[64][3];
   int32_t m_usedslotPenalty; // Choose the slot is used
   int32_t m_collisionPenalty; // Chosen slot is already used by hidden node
   int32_t m_exhaustedslotPenalty; // Packet bytes in queue > threshold, but run out of slots

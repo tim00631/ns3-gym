@@ -310,7 +310,7 @@ TdmaMacQueue::GetPktStatus ()
 {
   std::vector<std::pair<Ipv4Address,uint32_t>> queuePktStatus;
   //std::vector<std::pair<Ipv4Address,uint32_t>> queuePktStatus{std::pair<Ipv4Address,uint32_t>(Ipv4Address("10.1.1.1"),500)};
-  
+
   LlcSnapHeader h;
   Ipv4Header iph;
 
@@ -352,7 +352,7 @@ TdmaMacQueue::GetPktStatus ()
  
   uint32_t topN = queuePktStatus.size() > 3 ? 3 : queuePktStatus.size(); 
   std::vector<std::pair<Ipv4Address,uint32_t>> top3queuePktStatus(queuePktStatus.begin(),queuePktStatus.begin()+topN);
-  
+
 
   return top3queuePktStatus;
   //return queuePktStatus;

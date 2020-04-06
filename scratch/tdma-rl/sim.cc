@@ -207,12 +207,14 @@ TdmaExample::GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
 
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries();
 
+
+  
   Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
   rng->SetAttribute ("Min",DoubleValue (0));
   rng->SetAttribute ("Max",DoubleValue (tdmaRoutingTable.size()));
   
   uint32_t rngVal = rng->GetValue();
-
+  
   //std::random_shuffle (tdmaRoutingTable.begin(),tdmaRoutingTable.end());
   
   Ptr<Socket> socket;
@@ -220,6 +222,7 @@ TdmaExample::GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
   if (tdmaRoutingTable.size() != 0)
   {
   	std::map<Ipv4Address,Ptr<Socket>>::iterator it = m_socketMap[node->GetId()].find(tdmaRoutingTable[rngVal].destAddr);
+  	//std::map<Ipv4Address,Ptr<Socket>>::iterator it = m_socketMap[node->GetId()].find(tdmaRoutingTable[0].destAddr);
 	if (it != m_socketMap[node->GetId()].end() && remainTransmit > 0)
 	{
 		std::ostringstream msg; msg << "Hello World!" << '\0';

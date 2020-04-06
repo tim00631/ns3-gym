@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <cstring>
+#include <iomanip>
+#include <sstream>
 
 namespace ns3 {
 
@@ -18,7 +20,7 @@ TdmaGymEnv::TdmaGymEnv ()
   m_slotNum = 0;
   m_stepInterval1 = MicroSeconds(500);
   m_stepInterval2 = MicroSeconds(1000*100 + 500);
-
+  m_repeatChoose = 0;
 
   for (uint32_t i=0;i<NodeList::GetNNodes();i++)
   {
@@ -38,7 +40,7 @@ TdmaGymEnv::TdmaGymEnv (Time stepInterval1, Time stepInterval2)
   m_slotNum = 0;
   m_stepInterval1 = stepInterval1;
   m_stepInterval2 = stepInterval2;
-
+  m_repeatChoose = 0;
 
   for (uint32_t i=0;i<NodeList::GetNNodes();i++)
   {
@@ -166,6 +168,29 @@ TdmaGymEnv::GetGameOver()
       isGameOver = true;
   } 
   
+    
+  // Reward < -300
+  Ptr<Node> node = NodeList::GetNode (m_slotNum);
+  Ptr<NetDevice> dev = node-> GetDevice(0);
+  m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
+
+  float* reward = m_tdmaDevice->GetTdmaController()->GetRLReward(m_slotNum);
+  
+  for (uint32_t i=0;i<3;i++)
+  {
+     if (*(reward+i) <= -100)
+     {
+       m_repeatChoose++;   
+     }
+  }
+  
+  
+  
+  if (m_repeatChoose >= 3)
+  {
+     isGameOver = true;
+  }
+    
   return isGameOver;
 }
 
@@ -189,7 +214,6 @@ TdmaGymEnv::GetObservation()
   std::vector<std::pair<Ipv4Address, uint32_t>> top3queuePktStatus = m_tdmaDevice->GetTdmaController()->GetTop3QueuePktStatus(m_slotNum);
 
   uint32_t queuingBytes = m_tdmaDevice->GetTdmaController()->GetQueuingBytes(m_slotNum);
-  //uint32_t queuingBytes = 50;
   
 
   for (uint32_t i=0;i<top3queuePktStatus.size();i++)
@@ -204,10 +228,10 @@ TdmaGymEnv::GetObservation()
 	}
   }
 
-  int32_t nodeUsedList_top3Pkt[nodeUsedList.size()];
-  memset(nodeUsedList_top3Pkt,-1,nodeUsedList.size()*sizeof(int32_t));
+  int32_t nodeUsedList_top3Pkt[100];
+  memset(nodeUsedList_top3Pkt,-1,100*sizeof(int32_t));
 
-  for (uint32_t i=0;i<nodeUsedList.size();i++)
+  for (uint32_t i=0;i<100;i++)
   {
 	if (nodeUsedList[i].first == 0)
 	{
@@ -244,7 +268,6 @@ TdmaGymEnv::GetObservation()
   for (uint32_t i=0;i<nodeUsedList.size();i++)
   {
 	slotUsedTable_box->AddValue (nodeUsedList_top3Pkt[i]);
-	//slotUsedTable_box->AddValue (nodeUsedList[i].second);
   }
 
 
@@ -253,6 +276,7 @@ TdmaGymEnv::GetObservation()
 
 
   pktBytes_box->AddValue (queuingBytes);
+
   for (uint32_t i=0;i<top3queuePktStatus.size();i++)
   {
 	pktBytes_box->AddValue (top3queuePktStatus[i].second);
@@ -280,12 +304,7 @@ TdmaGymEnv::GetReward()
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<Node> node = NodeList::GetNode (m_slotNum);
-  Ptr<NetDevice> dev = node-> GetDevice(0);
-  m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
-
-  float reward = m_tdmaDevice->GetTdmaController()->GetRLReward(m_slotNum);
-  m_tdmaDevice->GetTdmaController()->ResetRLReward(m_slotNum);
+  float reward = 0;
   
   return reward;
 
@@ -298,7 +317,23 @@ std::string
 TdmaGymEnv::GetExtraInfo()
 {
   NS_LOG_FUNCTION (this);
-  std::string Info = std::to_string(m_slotNum);
+  
+  Ptr<Node> node = NodeList::GetNode (m_slotNum);
+  Ptr<NetDevice> dev = node-> GetDevice(0);
+  m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
+
+  float* reward = m_tdmaDevice->GetTdmaController()->GetRLReward(m_slotNum);
+  
+  std::stringstream stream;
+  stream << std::fixed << std::setprecision(2) << *(reward) << ",";
+  stream << std::fixed << std::setprecision(2) << *(reward+1) << ",";
+  stream << std::fixed << std::setprecision(2) << *(reward+2);
+  std::string Info = stream.str();
+  
+
+  m_tdmaDevice->GetTdmaController()->ResetRLReward(m_slotNum);
+    
+  //std::string Info = std::to_string(m_slotNum);
   NS_LOG_UNCOND("MyGetExtraInfo: " << Info);
   return Info;
 }

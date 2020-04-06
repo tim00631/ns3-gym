@@ -7,26 +7,30 @@ from tensorflow.keras.optimizers import RMSprop
 class Eval_Model(tf.keras.Model):
     def __init__(self, num_actions):
         super().__init__('mlp_q_network')
-        self.layer1 = layers.Dense(64, activation='relu')
+        self.layer1 = layers.Dense(128, activation='relu')
+        self.layer2 = layers.Dense(128, activation='relu')
         self.logits = layers.Dense(num_actions, activation=None)
 
     def call(self, inputs):
         x = tf.convert_to_tensor(inputs)
         layer1 = self.layer1(x)
-        logits = self.logits(layer1)
+        layer2 = self.layer2(layer1)
+        logits = self.logits(layer2)
         return logits
 
 
 class Target_Model(tf.keras.Model):
     def __init__(self, num_actions):
         super().__init__('mlp_q_network_1')
-        self.layer1 = layers.Dense(64, trainable=False, activation='relu')
+        self.layer1 = layers.Dense(128, trainable=False, activation='relu')
+        self.layer2 = layers.Dense(128, trainable=False, activation='relu')
         self.logits = layers.Dense(num_actions, trainable=False, activation=None)
 
     def call(self, inputs):
         x = tf.convert_to_tensor(inputs)
         layer1 = self.layer1(x)
-        logits = self.logits(layer1)
+        layer2 = self.layer2(layer1)
+        logits = self.logits(layer2)
         return logits
 
 
@@ -80,7 +84,7 @@ class DeepQNetwork:
         observation = observation[np.newaxis, :]
 
 
-        if np.random.uniform() < self.epsilon:
+        if np.random.uniform() <0:#< self.epsilon:
             # forward feed the observation and get q value for every actions
             actions_value = self.eval_model.predict(observation)[0]
 
@@ -94,6 +98,7 @@ class DeepQNetwork:
         return action
 
     def learn(self):
+
         # sample batch memory from all memory
         if self.memory_counter > self.params['memory_size']:
             sample_index = np.random.choice(self.params['memory_size'], size=self.params['batch_size'])

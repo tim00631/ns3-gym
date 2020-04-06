@@ -162,7 +162,7 @@ TdmaController::TdmaController ()
 	}
   }
 
-  memset(m_rlReward,0,64*sizeof(int32_t));
+  memset(m_rlReward,0,64*3*sizeof(int32_t));
   
 
   // random backoff 
@@ -192,13 +192,11 @@ TdmaController::StartTdmaSessions (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  //RotateUsedList();
-
   ClearTdmaDataSlot();
   
   //printf("Time: %luns, Overhead: %f, Delay: %fns, Throughput: %f B/s, Delivery Ratio: %f\n",Simulator::Now().GetNanoSeconds(),(double)m_tdmaNonDataBytes/m_tdmaTotalBytes,(double)m_tdmaDelay/m_pktCount, (double)(m_tdmaTotalBytes-m_tdmaNonDataBytes)/(Simulator::Now().GetSeconds()),(double)m_tdmaDataSuccessfulBytes/m_tdmaDataBytes);
   std::cout<<"--------------------------Frame Start : "<< Simulator::Now().GetNanoSeconds() <<"ns ---------------------------"<<std::endl;
-
+  NS_LOG_UNCOND("--------------------------Frame Start : "<< Simulator::Now().GetNanoSeconds() <<"ns ---------------------------");
   ScheduleTdmaSession (0);
   
   //ShiftCtrlSlot();
@@ -499,16 +497,13 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   //msg << m_tdmaUsedListPre[device->GetNode()->GetId()][i].first << std::setfill('0') << std::setw(2) << m_tdmaUsedListPre[device->GetNode()->GetId()][i].second;
   }
 
-   
+  
   /*
   // Search unused slot from UsedList
   std::vector<uint32_t> candidateList_unused;
   std::vector<uint32_t> unusedList_select;
 
-  
  
-  //uint32_t priority = rand() % 3 + 1;
-  uint32_t hops = 1;
   uint32_t num = rand() % 4; // Num of slot the node need to use (0~3)
   
   // Select the the unused slot in previous frame
@@ -519,8 +514,9 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   	{
 		if ((m_tdmaUsedListCur[device->GetNode()->GetId()][i].first ) == 0 ) // Slot is unused
 		{
-      candidateList_unused.push_back(i);
+      			candidateList_unused.push_back(i);
 		}
+		
 	}
 	
 	if (candidateList_unused.size() < num)
@@ -542,7 +538,9 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
 	sort(unusedList_select.begin(),unusedList_select.end());
   }
   
+  
   */
+  
 
 
   // If packet bytes in queue > threshold, but run out of slots
@@ -559,15 +557,17 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   }
   */
 
-  //sort(m_tdmaRLAction.begin(),m_tdmaRLAction.end());
+  sort(m_tdmaRLAction.begin(),m_tdmaRLAction.end());
   uint32_t counter = 0;
 
+  /*
   // If packet bytes in queue > threshold, but choose slot not enough
   if (GetQueuingBytes(device->GetNode()->GetId()) > m_queuingBytesThreshold && m_tdmaRLAction.size() == 0 )
   {
     m_rlReward[device->GetNode()->GetId()] += m_queuingPenalty;
   }
-
+  */
+  
   // Use the unused slot in unusedList_select
   for (uint32_t i=0;i<100;i++)
   {
@@ -576,12 +576,11 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
 	{
     if (m_tdmaUsedListCur[device->GetNode()->GetId()][i].first != 0)
     {
-      m_rlReward[device->GetNode()->GetId()] += m_usedslotPenalty;
+      //m_rlReward[device->GetNode()->GetId()][counter] += m_usedslotPenalty;
     }
       
 
 		// Choose a unused slot
-		//m_tdmaUsedListCur[device->GetNode()->GetId()][i] = std::make_pair(hops,device->GetNode()->GetId());
 		m_tdmaUsedListCur[device->GetNode()->GetId()][i] = std::make_pair(1,device->GetNode()->GetId());
 		//printf("Send:%d node use slot %d\n",(m_tdmaUsedListCur[device->GetNode()->GetId()][i].second),i);
 		counter++;
@@ -644,7 +643,7 @@ TdmaController::UpdateList (std::string s, uint32_t nodeId)
 		{
 			m_tdmaUsedListPre[nodeId][i/3] = std::make_pair(hops,slot_nodeId);
 			DeleteTdmaSlot(i/3+64,it_mac->second); 
-      m_rlReward[nodeId] += m_collisionPenalty;
+			//m_rlReward[nodeId] += m_collisionPenalty;
 			//printf("Node %d,delete previous frame:%d use slot %d, this slot is for Node %d\n",nodeId,nodeId,i/3,slot_nodeId);
 		}
      
@@ -664,7 +663,7 @@ TdmaController::UpdateList (std::string s, uint32_t nodeId)
 		else if ( hops != 0 && m_tdmaUsedListCur[nodeId][i/3-100].second == nodeId && slot_nodeId != nodeId )
 		{
 			m_tdmaUsedListCur[nodeId][i/3-100] = std::make_pair(hops,slot_nodeId);
-      m_rlReward[nodeId] += m_collisionPenalty;
+			//m_rlReward[nodeId] += m_collisionPenalty;
 			//printf("Node %d,delete:%d use slot %d, this slot is for Node %d\n",nodeId,nodeId,i/3-100,slot_nodeId);
 		}
     
@@ -804,22 +803,16 @@ TdmaController::SetRLAction(uint32_t slotNum)
   m_tdmaRLAction.push_back(slotNum);
 }
 
-void
-TdmaController::AddRLReward(float reward, uint32_t nodeId)
-{
-  m_rlReward[nodeId] += reward;
-}
-
-float
+float*
 TdmaController::GetRLReward(uint32_t nodeId)
 {
-  return m_rlReward[nodeId];
+  return *(m_rlReward+nodeId);
 }
 
 void
 TdmaController::ResetRLReward(uint32_t nodeId)
 {
-  m_rlReward[nodeId] = 0;
+  memset(m_rlReward+nodeId,0,3*sizeof(int32_t));
 }
 
 } // namespace ns3

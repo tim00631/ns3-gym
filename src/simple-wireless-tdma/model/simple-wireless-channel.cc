@@ -94,11 +94,11 @@ SimpleWirelessChannel::Send (Ptr<const Packet> p, Ptr<TdmaMacLow> sender)
       // speed of light is 3.3 ns/meter
       Time propagationTime = NanoSeconds (uint64_t (3.3 * distance));
       
-      
+/*      
       NS_LOG_UNCOND ("Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node " << sender->GetDevice ()->GetNode ()->GetId () << " sending to node " <<
                     tmp->GetDevice ()->GetNode ()->GetId () << " at distance " << distance <<
                     " meters; arriving time (ns): " << propagationTime << ", packet Size: " << p->GetSize () << ", Receiver: " << hdr.GetAddr1());
-/*
+
       std::cout <<  "Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node " << sender->GetDevice ()->GetNode ()->GetId () << " sending to node " <<
                     tmp->GetDevice ()->GetNode ()->GetId () << " at distance " << distance <<
                     " meters; arriving time (ns): " << propagationTime << ", packet Size: " << p->GetSize () << ", Receiver: " << hdr.GetAddr1() <<
