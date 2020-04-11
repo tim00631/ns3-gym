@@ -69,6 +69,8 @@ SimpleWirelessChannel::Send (Ptr<const Packet> p, Ptr<TdmaMacLow> sender)
   bool isCollision;
   std::vector<EventInfo> tmp_TransmissionEvent; 
 
+  NS_LOG_UNCOND("Start Sending");
+    
   for (TdmaMacLowList::const_iterator i = m_tdmaMacLowList.begin (); i != m_tdmaMacLowList.end (); ++i)
     {
       Ptr<TdmaMacLow> tmp = *i;
@@ -159,6 +161,7 @@ SimpleWirelessChannel::Send (Ptr<const Packet> p, Ptr<TdmaMacLow> sender)
       }
     }
 
+    NS_LOG_UNCOND("End Sending");
 
     // push sending events (this round) into m_TransmissionEvent     
     m_TransmissionEvent.insert (m_TransmissionEvent.end(), tmp_TransmissionEvent.begin(), tmp_TransmissionEvent.end() );

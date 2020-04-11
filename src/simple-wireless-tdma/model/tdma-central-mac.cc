@@ -289,7 +289,7 @@ TdmaCentralMac::Queue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
   NS_LOG_FUNCTION (this << packet << &hdr);
   if (!m_queue->Enqueue (packet, hdr))
     {
-      //NotifyTxDrop (packet);
+      NotifyTxDrop (packet);
     }
   //Cannot request for channel access in tdma. Tdma schedules every node in round robin manner
   //RequestForChannelAccess();
@@ -317,6 +317,7 @@ TdmaCentralMac::StartTransmission (uint64_t transmissionTimeUs, bool isCtrl)
     {
       totalTransmissionSlot -= packetTransmissionTime;
       Simulator::Schedule (packetTransmissionTime, &TdmaCentralMac::SendPacketDown, this, totalTransmissionSlot, isCtrl);
+      NS_LOG_UNCOND("StartTransmission");
     }
   else
     {

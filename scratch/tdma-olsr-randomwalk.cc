@@ -106,7 +106,6 @@ private:
   void ReceivePacket (Ptr <Socket> );
   Ptr <Socket> SetupPacketReceive (Ipv4Address, Ptr <Node> );
   void CheckThroughput ();
-  void GetModelData (Ptr<Node> node);
   void GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
                              uint32_t remainTransmit, Time pktInterval , uint32_t pktNum);
 };
@@ -191,23 +190,6 @@ TdmaExample::TdmaExample ()
   NS_LOG_FUNCTION (this);
 }
 
-void
-TdmaExample::GetModelData (Ptr<Node> node)
-{
-  
-  //Ptr<NetDevice> dev = node->GetDevice(0);
-  //Ptr<TdmaNetDevice> tdma_dev = DynamicCast<TdmaNetDevice>(dev);
-  //std::vector<std::pair<uint32_t,uint32_t> > nodeUsedList = tdma_dev->GetTdmaController()->GetNodeUsedList(1);
-  
-/*
-  std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries() ;
-  std::cout<<"RoutingTable"<<std::endl;
-  for(uint32_t i=0;i<tdmaRoutingTable.size();i++)
-  {
-    std::cout<<"Dest: "<<tdmaRoutingTable[i].destAddr<<", distance: "<<tdmaRoutingTable[i].distance<<", next: "<<tdmaRoutingTable[i].nextAddr<<std::endl;
-  }
-*/
-}
 
 void 
 TdmaExample::GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
@@ -311,17 +293,6 @@ TdmaExample::CaseRun (uint32_t nWifis, uint32_t Sink, double totalTime, std::str
   m_pktNum = pktNum;
   m_pktInterval = pktInterval;
 
-  std::stringstream ss;
-  ss << m_nWifis;
-  std::string t_nodes = ss.str ();
-
-  std::stringstream ss2;
-  ss2 << m_totalTime;
-  std::string sTotalTime = ss2.str ();
-
-  std::stringstream ss3;
-  ss3 << txpDistance;
-  std::string t_txpDistance = ss3.str ();
 
   CreateNodes ();
   CreateDevices (txpDistance);
@@ -329,9 +300,6 @@ TdmaExample::CaseRun (uint32_t nWifis, uint32_t Sink, double totalTime, std::str
   InstallInternetStack ();
   
   InstallApplications (selfGenerate);
-
-  Simulator::Schedule (Seconds (5), &TdmaExample::GetModelData,this, nodes.Get(1));
-  
 
 
   std::cout << "\nStarting simulation for " << m_totalTime << " s ...\n";

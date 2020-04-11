@@ -85,7 +85,10 @@ def start_sim_script(port=5555, simSeed=0, simArgs={}, debug=False):
 
 	ns3Proc = None
 	if debug:
-		ns3Proc = subprocess.Popen(wafString, shell=True, stdout=None, stderr=None)
+        
+		errorOutput = open("/test/RLerror.log","w")
+        
+		ns3Proc = subprocess.Popen(wafString, shell=True, stdout=None, stderr=errorOutput)
 	else:
 		'''
 		users were complaining that when they start example they have to wait 10 min for initialization.

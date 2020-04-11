@@ -123,13 +123,13 @@ int main (int argc, char **argv)
   TdmaExample test;
   uint32_t nWifis = 64;
   uint32_t Sink = 3;
-  double totalTime = 100.0;
+  double totalTime = 300.0;
   std::string rate ("8kbps");
   uint32_t nodeSpeed = 10; //in m/s
   std::string appl = "all";
   uint32_t periodicUpdateInterval = 15;
   uint32_t settlingTime = 6;
-  double dataStart = 5.0;
+  double dataStart = 3.0;
   double txpDistance = 1000.0;
   bool selfGenerate = true;
 
@@ -163,7 +163,7 @@ int main (int argc, char **argv)
   cmd.AddValue ("simSeed", "simSeed", simSeed);
   cmd.Parse (argc, argv);
   
-  RngSeedManager::SetSeed (2321);
+  RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (simSeed);
 
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", StringValue ("1000")); // bytes!
@@ -226,11 +226,12 @@ TdmaExample::GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
 	if (it != m_socketMap[node->GetId()].end() && remainTransmit > 0)
 	{
 		std::ostringstream msg; msg << "Hello World!" << '\0';
-		Ptr<Packet> packet = Create<Packet> ((uint8_t*) msg.str().c_str(), pktSize);
+		Ptr<Packet> packet;
    
 		for (uint32_t i=0;i<pktNum;i++)
 		{
-      				it->second->Send (packet);
+			packet = Create<Packet> ((uint8_t*) msg.str().c_str(), pktSize);
+			it->second->Send (packet);
 		}
 	
       		Simulator::Schedule (pktInterval, &TdmaExample::GenerateTraffic, this,
@@ -252,6 +253,7 @@ void
 TdmaExample::ReceivePacket (Ptr <Socket> socket)
 {
   std::cout <<"Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node "<< socket->GetNode()->GetId() << " Received one packet!" << std::endl;
+  NS_LOG_UNCOND("Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node "<< socket->GetNode()->GetId() << " Received one packet!");
   Ptr <Packet> packet;
   while ((packet = socket->Recv ()))
   {
@@ -311,29 +313,17 @@ TdmaExample::CaseRun (uint32_t nWifis, uint32_t Sink, double totalTime, std::str
   m_pktNum = pktNum;
   m_pktInterval = pktInterval;
 
-  std::stringstream ss;
-  ss << m_nWifis;
-  std::string t_nodes = ss.str ();
-
-  std::stringstream ss2;
-  ss2 << m_totalTime;
-  std::string sTotalTime = ss2.str ();
-
-  std::stringstream ss3;
-  ss3 << txpDistance;
-  std::string t_txpDistance = ss3.str ();
-
+    
   CreateNodes ();
   CreateDevices (txpDistance);
   SetupMobility ();
   InstallInternetStack ();
 
+  InstallApplications (selfGenerate);
+    
   Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (openGymPort);
   Ptr<TdmaGymEnv> tdmaGymEnv = CreateObject<TdmaGymEnv> ();
   tdmaGymEnv->SetOpenGymInterface(openGymInterface);
-
-  
-  InstallApplications (selfGenerate);
 
 
   std::cout << "\nStarting simulation for " << m_totalTime << " s ...\n";
@@ -362,8 +352,8 @@ TdmaExample::SetupMobility ()
  // Random initial position
   ObjectFactory pos;
   pos.SetTypeId ("ns3::RandomRectanglePositionAllocator");
-  pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=500.0|Max=2500.0]"));
-  pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=500.0|Max=2500.0]"));
+  pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=5000.0]"));
+  pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=5000.0]"));
 
   Ptr<PositionAllocator> positionAlloc = pos.Create ()->GetObject<PositionAllocator> ();  
   mobility.SetPositionAllocator (positionAlloc);
@@ -374,12 +364,12 @@ TdmaExample::SetupMobility ()
 		  "Mode", StringValue ("Time"),
 		  "Time", StringValue ("10s"), // Change direction per 10s
 		  "Speed", StringValue ("ns3::UniformRandomVariable[Min=10.0|Max=20]"), // Set speed = 20m/s
-  		  "Bounds", RectangleValue (Rectangle (0, 3000, 0, 3000))); // walk boundary
+  		  "Bounds", RectangleValue (Rectangle (0, 5000, 0, 5000))); // walk boundary
 
   mobility.Install (nodes);
 
-  pos.Set ("X", StringValue ("ns3::ConstantRandomVariable[Constant=1500.0]"));
-  pos.Set ("Y", StringValue ("ns3::ConstantRandomVariable[Constant=1500.0]"));
+  pos.Set ("X", StringValue ("ns3::ConstantRandomVariable[Constant=2500.0]"));
+  pos.Set ("Y", StringValue ("ns3::ConstantRandomVariable[Constant=2500.0]"));
 
   Ptr<PositionAllocator> positionAlloc2 = pos.Create ()->GetObject<PositionAllocator> ();  
   mobility.SetPositionAllocator (positionAlloc2);
@@ -431,32 +421,10 @@ TdmaExample::InstallApplications (bool selfGenerate)
 {
   if (selfGenerate)
   {
-/*
-	for (uint32_t i=1;i<m_nWifis;i++)
-	{
-		Ptr<Node> node = NodeList::GetNode (i);
-		Ptr<Socket> sink = SetupPacketReceive (Ipv4Address::GetAny(),node);
-
-		for (uint32_t j=1;j<m_nWifis;j++)
-		{
-			if (j == i) continue;
-			
-			TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  			Ptr<Socket> source = Socket::CreateSocket (nodes.Get (j), tid);
-		  	InetSocketAddress remote = InetSocketAddress (interfaces.GetAddress (i, 0), port);
-		  	source->Connect (remote);
-
-		  	// Give OLSR time to converge-- 30 seconds perhaps
-		  	Simulator::Schedule (Seconds (m_dataStart), &GenerateTraffic,
-        			             source, 128, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
-
-		}
-
-	}
-*/
 
 	for (uint32_t i=0;i<m_nWifis;i++)
 	{
+        /*
 		Ptr<Node> node = NodeList::GetNode (i);
 		Ptr<Socket> sink = SetupPacketReceive (Ipv4Address::GetAny(),node);
 		std::map<Ipv4Address,Ptr<Socket>> ip2socket;
@@ -473,10 +441,30 @@ TdmaExample::InstallApplications (bool selfGenerate)
 			ip2socket.insert(std::make_pair(interfaces.GetAddress (j, 0),source));	
 			
 		}
+        */
+        Ptr<Node> node = NodeList::GetNode (i);
+		Ptr<Socket> sink = SetupPacketReceive (Ipv4Address::GetAny(),node);
+		std::map<Ipv4Address,Ptr<Socket>> ip2socket;
+
+		for(uint32_t j=0;j<m_nWifis;j++)
+		{
+			if(i == j) continue;
+			
+			TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  			Ptr<Socket> source = Socket::CreateSocket (nodes.Get (j), tid);
+		  	InetSocketAddress remote = InetSocketAddress (interfaces.GetAddress (i, 0), port);
+		  	source->Connect (remote);
+			
+			ip2socket.insert(std::make_pair(interfaces.GetAddress (j, 0),source));	
+			
+		}
+        
+        
 		m_socketMap.push_back(ip2socket);
 
+        Ptr<Node> node_source = NodeList::GetNode (i);
 		Simulator::Schedule (Seconds (m_dataStart), &TdmaExample::GenerateTraffic, this,
-					node, 128, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
+					node_source, 128, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
 	}
 
   }

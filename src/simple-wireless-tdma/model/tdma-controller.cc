@@ -390,6 +390,8 @@ TdmaController::ScheduleTdmaSession (const uint32_t slotNum)
   NS_LOG_FUNCTION (slotNum);
   std::map<uint32_t, std::vector<Ptr<TdmaMac> > >::iterator it = m_slotPtrs.find (slotNum);
   
+  NS_LOG_UNCOND("slotNum: "<<slotNum);
+  
   bool isCtrl =  (slotNum < m_nNodes );
   Time slotTime;
 
@@ -426,7 +428,7 @@ TdmaController::ScheduleTdmaSession (const uint32_t slotNum)
 			{
 				if ( slotNum < m_nNodes  ) // Control slot
 				{
-					//SendUsed(it_status->second);
+					SendUsed(it_status->second);
 				}
 			}
 		}
@@ -484,7 +486,7 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   std::ostringstream msg;  msg << "#TDMAUSED#";
 
   //uint32_t unusedSlot_counter = 0;
-
+  
   // Send previous frame's UsedList to avoid the hidden nodes problem
   for (uint32_t i=0;i<100;i++)
   {
@@ -497,8 +499,8 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   //msg << m_tdmaUsedListPre[device->GetNode()->GetId()][i].first << std::setfill('0') << std::setw(2) << m_tdmaUsedListPre[device->GetNode()->GetId()][i].second;
   }
 
-  
   /*
+  
   // Search unused slot from UsedList
   std::vector<uint32_t> candidateList_unused;
   std::vector<uint32_t> unusedList_select;
@@ -576,7 +578,7 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
 	{
     if (m_tdmaUsedListCur[device->GetNode()->GetId()][i].first != 0)
     {
-      //m_rlReward[device->GetNode()->GetId()][counter] += m_usedslotPenalty;
+      m_rlReward[device->GetNode()->GetId()][counter] += m_usedslotPenalty;
     }
       
 

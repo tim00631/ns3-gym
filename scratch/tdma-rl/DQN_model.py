@@ -84,7 +84,7 @@ class DeepQNetwork:
         observation = observation[np.newaxis, :]
 
 
-        if np.random.uniform() <0:#< self.epsilon:
+        if np.random.uniform() < self.epsilon:
             # forward feed the observation and get q value for every actions
             actions_value = self.eval_model.predict(observation)[0]
 
