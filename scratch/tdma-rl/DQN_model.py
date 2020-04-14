@@ -79,12 +79,12 @@ class DeepQNetwork:
 
         self.memory_counter += 1
 
-    def choose_action(self, observation):
+    def choose_action(self, observation, isTraining=True):
         # to have batch dimension when feed into tf placeholder
         observation = observation[np.newaxis, :]
 
 
-        if np.random.uniform() < self.epsilon:
+        if np.random.uniform() < self.epsilon or not isTraining:
             # forward feed the observation and get q value for every actions
             actions_value = self.eval_model.predict(observation)[0]
 
@@ -123,7 +123,7 @@ class DeepQNetwork:
         if self.learn_step_counter % self.params['replace_target_iter'] == 0:
             for eval_layer, target_layer in zip(self.eval_model.layers, self.target_model.layers):
                 target_layer.set_weights(eval_layer.get_weights())
-            print('\ntarget_params_replaced\n')
+            print('\ntarget_params_replaced')
 
         """
         For example in this batch I have 2 samples and 3 actions:
