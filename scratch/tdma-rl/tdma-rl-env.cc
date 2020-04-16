@@ -19,7 +19,7 @@ TdmaGymEnv::TdmaGymEnv ()
   NS_LOG_FUNCTION (this);
   m_slotNum = 0;
   m_stepInterval1 = MicroSeconds(500);
-  m_stepInterval2 = MicroSeconds(1000*100 + 500);
+  m_stepInterval2 = MicroSeconds(1000*32 + 500);
   m_repeatChoose = 0;
 /*
   for (uint32_t i=0;i<NodeList::GetNNodes();i++)
@@ -58,7 +58,7 @@ void
 TdmaGymEnv::ScheduleNextStateRead ()
 {
   NS_LOG_FUNCTION (this);
-  if (m_slotNum <63){
+  if (m_slotNum <15){
   	Simulator::Schedule (m_stepInterval1, &TdmaGymEnv::ScheduleNextStateRead, this);
   }
   else {
@@ -67,7 +67,7 @@ TdmaGymEnv::ScheduleNextStateRead ()
   
   Notify();
   
-  m_slotNum = m_slotNum >= 63 ? 0 : m_slotNum+1;
+  m_slotNum = m_slotNum >= 15 ? 0 : m_slotNum+1;
 }
 
 TdmaGymEnv::~TdmaGymEnv ()
@@ -99,10 +99,10 @@ Ptr<OpenGymSpace>
 TdmaGymEnv::GetActionSpace()
 {
   // output : Data slot number
-  uint32_t slotRange = 100; // the range of slot number the node could choose
+  uint32_t slotRange = 32; // the range of slot number the node could choose
 
   float low = 0;
-  float high = 99;
+  float high = 31;
   std::vector<uint32_t> shape = {slotRange,};
   std::string dtype = TypeNameGet<int32_t> ();
 
@@ -119,9 +119,9 @@ TdmaGymEnv::GetObservationSpace()
 {
   NS_LOG_FUNCTION (this);
   // input :
-  // Slot Used Table (size : 100 slots)
+  // Slot Used Table (size : 32 slots)
   // tdma queue top 3 packet bytes 
-  uint32_t dataSlotNum = 100;
+  uint32_t dataSlotNum = 32;
 
   float low = -1;
   float high = 3;
@@ -229,10 +229,10 @@ TdmaGymEnv::GetObservation()
 	}
   }
 
-  int32_t nodeUsedList_top3Pkt[100];
-  memset(nodeUsedList_top3Pkt,-1,100*sizeof(int32_t));
+  int32_t nodeUsedList_top3Pkt[32];
+  memset(nodeUsedList_top3Pkt,-1,32*sizeof(int32_t));
 
-  for (uint32_t i=0;i<100;i++)
+  for (uint32_t i=0;i<32;i++)
   {
 	if (nodeUsedList[i].first == 0)
 	{
@@ -262,14 +262,13 @@ TdmaGymEnv::GetObservation()
   }
 
   
-  uint32_t dataSlotNum = 100;
+  uint32_t dataSlotNum = 32;
   std::vector<uint32_t> shape = {dataSlotNum,};
   Ptr<OpenGymBoxContainer<int32_t> > slotUsedTable_box = CreateObject<OpenGymBoxContainer<int32_t> >(shape);
 
-  for (uint32_t i=0;i<100;i++) //nodeUsedList.size()
+  for (uint32_t i=0;i<32;i++) //nodeUsedList.size()
   {
 	slotUsedTable_box->AddValue (nodeUsedList_top3Pkt[i]);
-    //slotUsedTable_box->AddValue (0);  
   }
 
 

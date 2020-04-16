@@ -115,7 +115,7 @@ int main (int argc, char **argv)
   Packet::EnablePrinting ();
 
   TdmaExample test;
-  uint32_t nWifis = 64;
+  uint32_t nWifis = 16;
   uint32_t Sink = 3;
   double totalTime = 100.0;
   std::string rate ("8kbps");

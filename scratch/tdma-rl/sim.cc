@@ -121,7 +121,7 @@ int main (int argc, char **argv)
   Packet::EnablePrinting ();
 
   TdmaExample test;
-  uint32_t nWifis = 64;
+  uint32_t nWifis = 16;
   uint32_t Sink = 3;
   double totalTime = 300.0;
   std::string rate ("8kbps");
@@ -138,7 +138,7 @@ int main (int argc, char **argv)
   uint32_t slotTime = 1000 * 8 / 8000 * 1000000; // us
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
-  uint32_t pktNum = 10;
+  uint32_t pktNum = 30;
   double pktInterval = 0.1;
   uint32_t simSeed = 0;
   //srand(30000);
@@ -464,7 +464,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
 
         Ptr<Node> node_source = NodeList::GetNode (i);
 		Simulator::Schedule (Seconds (m_dataStart), &TdmaExample::GenerateTraffic, this,
-					node_source, 128, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
+					node_source, 256, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
 	}
 
   }

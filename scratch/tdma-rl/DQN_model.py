@@ -7,8 +7,8 @@ from tensorflow.keras.optimizers import RMSprop
 class Eval_Model(tf.keras.Model):
     def __init__(self, num_actions):
         super().__init__('mlp_q_network')
-        self.layer1 = layers.Dense(128, activation='relu')
-        self.layer2 = layers.Dense(128, activation='relu')
+        self.layer1 = layers.Dense(32, activation='relu')
+        self.layer2 = layers.Dense(32, activation='relu')
         self.logits = layers.Dense(num_actions, activation=None)
 
     def call(self, inputs):
@@ -22,8 +22,8 @@ class Eval_Model(tf.keras.Model):
 class Target_Model(tf.keras.Model):
     def __init__(self, num_actions):
         super().__init__('mlp_q_network_1')
-        self.layer1 = layers.Dense(128, trainable=False, activation='relu')
-        self.layer2 = layers.Dense(128, trainable=False, activation='relu')
+        self.layer1 = layers.Dense(32, trainable=False, activation='relu')
+        self.layer2 = layers.Dense(32, trainable=False, activation='relu')
         self.logits = layers.Dense(num_actions, trainable=False, activation=None)
 
     def call(self, inputs):
@@ -123,7 +123,7 @@ class DeepQNetwork:
         if self.learn_step_counter % self.params['replace_target_iter'] == 0:
             for eval_layer, target_layer in zip(self.eval_model.layers, self.target_model.layers):
                 target_layer.set_weights(eval_layer.get_weights())
-            print('\ntarget_params_replaced')
+            #print('\ntarget_params_replaced')
 
         """
         For example in this batch I have 2 samples and 3 actions:

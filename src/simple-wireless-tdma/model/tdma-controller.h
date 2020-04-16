@@ -194,19 +194,19 @@ private:
   Ptr<SimpleWirelessChannel> m_channel;
 
   uint32_t m_nNodes;
-  uint32_t m_tdmaCtrlSlotMap[64];
-  uint32_t m_tdmaCtrlSlotMapRev[64];
+  uint32_t m_tdmaCtrlSlotMap[16];
+  uint32_t m_tdmaCtrlSlotMapRev[16];
   std::map<uint32_t,Ptr<TdmaNetDevice> > m_tdmaDeviceList;  // (NodeId,(device,IsEntry))
   std::map<Ptr<TdmaMac>,uint32_t> m_mac2Id; // use TdmaMac to get nodeId
   std::map<uint32_t,Ptr<TdmaMac>> m_id2mac; // use nodeId to get TdmaMac
-  std::pair<uint32_t,uint32_t> m_tdmaUsedListCur[64][100]; // store each node's Data slot Used list (current frame) [nodeId][slotNum].(priority,nodeId)
-  std::pair<uint32_t,uint32_t> m_tdmaUsedListPre[64][100]; // store each node's Data slot Used list (previous frame) [nodeId][slotNum].(priority,nodeId)
-  int32_t m_tdmaEntrySlotNum[64];
+  std::pair<uint32_t,uint32_t> m_tdmaUsedListCur[16][32]; // store each node's Data slot Used list (current frame) [nodeId][slotNum].(priority,nodeId)
+  std::pair<uint32_t,uint32_t> m_tdmaUsedListPre[16][32]; // store each node's Data slot Used list (previous frame) [nodeId][slotNum].(priority,nodeId)
+  int32_t m_tdmaEntrySlotNum[16];
 
   uint64_t m_tdmaDataBytes;
 
   std::vector<uint32_t> m_tdmaRLAction;
-  float m_rlReward[64][3];
+  float m_rlReward[16][3];
   int32_t m_usedslotPenalty; // Choose the slot is used
   int32_t m_collisionPenalty; // Chosen slot is already used by hidden node
   int32_t m_exhaustedslotPenalty; // Packet bytes in queue > threshold, but run out of slots
