@@ -319,11 +319,12 @@ TdmaGymEnv::GetExtraInfo()
 {
   NS_LOG_FUNCTION (this);
   
-  Ptr<Node> node = NodeList::GetNode (m_slotNum);
+  uint32_t previous_slotNum = m_slotNum == 0 ? 15 : m_slotNum - 1;
+  Ptr<Node> node = NodeList::GetNode (previous_slotNum);
   Ptr<NetDevice> dev = node-> GetDevice(0);
   Ptr<TdmaNetDevice> m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
 
-  float* reward = m_tdmaDevice->GetTdmaController()->GetRLReward(m_slotNum);
+  float* reward = m_tdmaDevice->GetTdmaController()->GetRLReward(previous_slotNum);
   
   std::stringstream stream;
   stream << std::fixed << std::setprecision(2) << *(reward) << ",";
@@ -332,7 +333,7 @@ TdmaGymEnv::GetExtraInfo()
   std::string Info = stream.str();
   
 
-  m_tdmaDevice->GetTdmaController()->ResetRLReward(m_slotNum);
+  m_tdmaDevice->GetTdmaController()->ResetRLReward(previous_slotNum);
     
   //std::string Info = std::to_string(m_slotNum);
   NS_LOG_UNCOND("MyGetExtraInfo: " << Info);

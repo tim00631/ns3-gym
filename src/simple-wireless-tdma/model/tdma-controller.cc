@@ -128,10 +128,10 @@ TdmaController::TdmaController ()
 		m_activeEpoch (false),
 		m_tdmaMode (CENTRALIZED),
     m_channel (0),
-    m_usedslotPenalty (-100),
-    m_collisionPenalty (-2),
-    m_exhaustedslotPenalty (-10),
-    m_queuingPenalty (-3),
+    m_usedslotPenalty (-10),
+    m_collisionPenalty (-0.02),
+    m_exhaustedslotPenalty (-0.1),
+    m_queuingPenalty (-0.3),
     m_delayReward (10),
     m_queuingBytesThreshold (GetSlotTime()*GetDataRate() / 8 * (1/3))
 {
@@ -562,13 +562,7 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   sort(m_tdmaRLAction.begin(),m_tdmaRLAction.end());
   uint32_t counter = 0;
 
-  /*
-  // If packet bytes in queue > threshold, but choose slot not enough
-  if (GetQueuingBytes(device->GetNode()->GetId()) > m_queuingBytesThreshold && m_tdmaRLAction.size() == 0 )
-  {
-    m_rlReward[device->GetNode()->GetId()] += m_queuingPenalty;
-  }
-  */
+
   
   // Use the unused slot in unusedList_select
   for (uint32_t i=0;i<32;i++)

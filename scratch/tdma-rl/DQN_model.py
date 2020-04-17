@@ -87,15 +87,17 @@ class DeepQNetwork:
         if np.random.uniform() < self.epsilon or not isTraining:
             # forward feed the observation and get q value for every actions
             actions_value = self.eval_model.predict(observation)[0]
-
+            
+            # Original: output Top 1 q_value's index
             #action = np.argmax(actions_value)
             
             # return the top N action, and then using queuing bytes to decide 
-            action_unsort = np.argpartition(actions_value,-self.params['n_max_chosen'])[-self.params['n_max_chosen']:]
-            action = action_unsort[np.argsort(actions_value[action_unsort])]
+            #action_unsort = np.argpartition(actions_value,-self.params['n_max_chosen'])[-self.params['n_max_chosen']:]
+            #action = action_unsort[np.argsort(actions_value[action_unsort])]
         else:
-            action = np.random.choice(self.params['n_actions'],self.params['n_max_chosen'],replace=False)
-        return action
+            #action = np.random.choice(self.params['n_actions'],self.params['n_max_chosen'],replace=False)
+            actions_value = np.random.random_sample((self.params['n_actions'],))
+        return actions_value
 
     def learn(self):
 
