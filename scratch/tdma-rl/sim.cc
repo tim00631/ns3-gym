@@ -139,7 +139,7 @@ int main (int argc, char **argv)
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
   uint32_t pktNum = 30;
-  double pktInterval = 0.1;
+  double pktInterval = 0.05;
   uint32_t simSeed = 0;
   //srand(30000);
 

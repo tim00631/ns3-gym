@@ -347,7 +347,8 @@ TdmaMacQueue::GetPktStatus ()
 
   std::sort(queuePktStatus.begin(),queuePktStatus.end(),[](const std::pair<Ipv4Address,uint32_t>& l, const std::pair<Ipv4Address,uint32_t>& r) 
 	    {
-		return l.second != r.second ? l.second < r.second : l.first < r.first;
+		//return l.second != r.second ? l.second < r.second : l.first < r.first;
+          return l.second >= r.second;
 	    });
  
   uint32_t topN = queuePktStatus.size() > 3 ? 3 : queuePktStatus.size(); 
