@@ -123,7 +123,7 @@ int main (int argc, char **argv)
   std::string appl = "all";
   uint32_t periodicUpdateInterval = 15;
   uint32_t settlingTime = 6;
-  double dataStart = 5.0;
+  double dataStart = 3.0;
   double txpDistance = 1000.0;
   bool selfGenerate = true;
 
@@ -132,8 +132,8 @@ int main (int argc, char **argv)
   uint32_t slotTime = 1000 * 8 / 8000 * 1000000; // us
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
-  uint32_t pktNum = 1;
-  double pktInterval = 1.0;
+  uint32_t pktNum = 30;
+  double pktInterval = 0.05;
 
   srand(10000);
 
@@ -440,7 +440,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
 		m_socketMap.push_back(ip2socket);
 
 		Simulator::Schedule (Seconds (m_dataStart), &TdmaExample::GenerateTraffic, this,
-					node, 128, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
+					node, 256, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
 	}
 
   }

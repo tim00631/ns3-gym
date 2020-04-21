@@ -317,7 +317,7 @@ TdmaCentralMac::StartTransmission (uint64_t transmissionTimeUs, bool isCtrl)
     {
       totalTransmissionSlot -= packetTransmissionTime;
       Simulator::Schedule (packetTransmissionTime, &TdmaCentralMac::SendPacketDown, this, totalTransmissionSlot, isCtrl);
-      NS_LOG_UNCOND("StartTransmission");
+      //NS_LOG_UNCOND("StartTransmission");
     }
   else
     {

@@ -200,9 +200,10 @@ TdmaMacQueue::Cleanup (bool isCtrl)
                                                         << " queueSize: " << m_queue[isCtrl].size ()
                                                         << " count:" << m_count[isCtrl]);
           m_txDropCallback (i->packet);
-          i = m_queue[isCtrl].erase (i);
           if(!isCtrl) 
             m_queuingBytes -= i->packet->GetSize ();
+          
+	  i = m_queue[isCtrl].erase (i);
           n++;
         }
     }

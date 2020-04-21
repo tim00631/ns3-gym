@@ -130,8 +130,6 @@ TdmaController::TdmaController ()
     m_channel (0),
     m_usedslotPenalty (-10),
     m_collisionPenalty (-0.02),
-    m_exhaustedslotPenalty (-0.1),
-    m_queuingPenalty (-0.3),
     m_delayReward (10),
     m_queuingBytesThreshold (GetSlotTime()*GetDataRate() / 8 * (1/3))
 {
@@ -390,7 +388,7 @@ TdmaController::ScheduleTdmaSession (const uint32_t slotNum)
   NS_LOG_FUNCTION (slotNum);
   std::map<uint32_t, std::vector<Ptr<TdmaMac> > >::iterator it = m_slotPtrs.find (slotNum);
   
-  NS_LOG_UNCOND("slotNum: "<<slotNum);
+  //NS_LOG_UNCOND("slotNum: "<<slotNum);
   
   bool isCtrl =  (slotNum < m_nNodes );
   Time slotTime;
@@ -485,7 +483,6 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
 {
   std::ostringstream msg;  msg << "#TDMAUSED#";
 
-  //uint32_t unusedSlot_counter = 0;
   
   // Send previous frame's UsedList to avoid the hidden nodes problem
   for (uint32_t i=0;i<32;i++)
@@ -496,11 +493,10 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
     else
       msg << m_tdmaUsedListPre[device->GetNode()->GetId()][i].first << std::setfill('0') << std::setw(2) << m_tdmaUsedListPre[device->GetNode()->GetId()][i].second;
     
-  //msg << m_tdmaUsedListPre[device->GetNode()->GetId()][i].first << std::setfill('0') << std::setw(2) << m_tdmaUsedListPre[device->GetNode()->GetId()][i].second;
   }
 
   
-  /* 
+/*   
   // Search unused slot from UsedList
   std::vector<uint32_t> candidateList_unused;
   std::vector<uint32_t> unusedList_select;
@@ -543,21 +539,6 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   */
   
   
-
-
-  // If packet bytes in queue > threshold, but run out of slots
-  /*
-  for (uint32_t i=0;i<32;i++)
-  {
-    if ((m_tdmaUsedListCur[device->GetNode()->GetId()][i].first ) == 0 ) // Slot is unused
-      unusedSlot_counter++;
-  }
-  
-  if (unusedSlot_counter == 0 && GetQueuingBytes(device->GetNode()->GetId()) > m_queuingBytesThreshold)
-  {
-    
-  }
-  */
 
   sort(m_tdmaRLAction.begin(),m_tdmaRLAction.end());
   uint32_t counter = 0;
@@ -636,7 +617,7 @@ TdmaController::UpdateList (std::string s, uint32_t nodeId)
 			m_tdmaUsedListPre[nodeId][i/3] = std::make_pair(hops,slot_nodeId);
 			//printf("Node %d,update previous frame:%d use slot %d\n",nodeId,slot_nodeId,i/3);
 		}
-		else if ( hops >1 && m_tdmaUsedListPre[nodeId][i/3].second == nodeId && slot_nodeId != nodeId )
+		else if ( hops != 0 && m_tdmaUsedListPre[nodeId][i/3].second == nodeId && slot_nodeId != nodeId )
 		{
 			m_tdmaUsedListPre[nodeId][i/3] = std::make_pair(hops,slot_nodeId);
 			DeleteTdmaSlot(i/3+16,it_mac->second); 
@@ -657,7 +638,7 @@ TdmaController::UpdateList (std::string s, uint32_t nodeId)
 			m_tdmaUsedListCur[nodeId][i/3-32] = std::make_pair(hops,slot_nodeId);
 			//printf("Node %d,update:%d use slot %d\n",nodeId,slot_nodeId,i/3-32);
 		}
-		else if ( hops >1 && m_tdmaUsedListCur[nodeId][i/3-32].second == nodeId && slot_nodeId != nodeId )
+		else if ( hops != 0 && m_tdmaUsedListCur[nodeId][i/3-32].second == nodeId && slot_nodeId != nodeId )
 		{
 			m_tdmaUsedListCur[nodeId][i/3-32] = std::make_pair(hops,slot_nodeId);
             DeleteTdmaSlot(i/3-32+16,it_mac->second); 

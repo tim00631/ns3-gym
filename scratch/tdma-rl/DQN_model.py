@@ -7,8 +7,8 @@ from tensorflow.keras.optimizers import RMSprop
 class Eval_Model(tf.keras.Model):
     def __init__(self, num_actions):
         super().__init__('mlp_q_network')
-        self.layer1 = layers.Dense(32, activation='relu')
-        self.layer2 = layers.Dense(32, activation='relu')
+        self.layer1 = layers.Dense(35, activation='relu',kernel_initializer='RandomNormal')
+        self.layer2 = layers.Dense(35, activation='relu',kernel_initializer='RandomNormal')
         self.logits = layers.Dense(num_actions, activation=None)
 
     def call(self, inputs):
@@ -22,8 +22,8 @@ class Eval_Model(tf.keras.Model):
 class Target_Model(tf.keras.Model):
     def __init__(self, num_actions):
         super().__init__('mlp_q_network_1')
-        self.layer1 = layers.Dense(32, trainable=False, activation='relu')
-        self.layer2 = layers.Dense(32, trainable=False, activation='relu')
+        self.layer1 = layers.Dense(35, trainable=False, activation='relu')
+        self.layer2 = layers.Dense(35, trainable=False, activation='relu')
         self.logits = layers.Dense(num_actions, trainable=False, activation=None)
 
     def call(self, inputs):

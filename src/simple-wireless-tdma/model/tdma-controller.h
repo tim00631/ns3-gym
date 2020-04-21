@@ -209,8 +209,6 @@ private:
   float m_rlReward[16][3];
   int32_t m_usedslotPenalty; // Choose the slot is used
   int32_t m_collisionPenalty; // Chosen slot is already used by hidden node
-  int32_t m_exhaustedslotPenalty; // Packet bytes in queue > threshold, but run out of slots
-  int32_t m_queuingPenalty; // Packet bytes in queue > threshold, but choose slot not enough
   int32_t m_delayReward; // Shortest path remain hops > transmission total frame
 
   uint32_t m_queuingBytesThreshold;
