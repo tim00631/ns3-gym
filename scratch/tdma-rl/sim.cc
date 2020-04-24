@@ -138,8 +138,8 @@ int main (int argc, char **argv)
   uint32_t slotTime = 1000 * 8 / 8000 * 1000000; // us
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
-  uint32_t pktNum = 30;
-  double pktInterval = 0.05;
+  uint32_t pktNum = 20;
+  double pktInterval = 0.04;
   uint32_t simSeed = 0;
   //srand(30000);
 
@@ -164,7 +164,7 @@ int main (int argc, char **argv)
   cmd.Parse (argc, argv);
   
   RngSeedManager::SetSeed (1);
-  RngSeedManager::SetRun (simSeed);
+  RngSeedManager::SetRun (663380072);
 
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", StringValue ("1000")); // bytes!
   Config::SetDefault ("ns3::OnOffApplication::DataRate", StringValue (rate));
@@ -352,24 +352,24 @@ TdmaExample::SetupMobility ()
  // Random initial position
   ObjectFactory pos;
   pos.SetTypeId ("ns3::RandomRectanglePositionAllocator");
-  pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=5000.0]"));
-  pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=5000.0]"));
+  pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=500.0|Max=2500.0]"));
+  pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=500.0|Max=2500.0]"));
 
   Ptr<PositionAllocator> positionAlloc = pos.Create ()->GetObject<PositionAllocator> ();  
   mobility.SetPositionAllocator (positionAlloc);
 
-
+  
   // Set Random walk model
   mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
 		  "Mode", StringValue ("Time"),
 		  "Time", StringValue ("10s"), // Change direction per 10s
 		  "Speed", StringValue ("ns3::UniformRandomVariable[Min=10.0|Max=20]"), // Set speed = 20m/s
-  		  "Bounds", RectangleValue (Rectangle (0, 5000, 0, 5000))); // walk boundary
-
+  		  "Bounds", RectangleValue (Rectangle (0, 3000, 0, 3000))); // walk boundary
+  
   mobility.Install (nodes);
 
-  pos.Set ("X", StringValue ("ns3::ConstantRandomVariable[Constant=2500.0]"));
-  pos.Set ("Y", StringValue ("ns3::ConstantRandomVariable[Constant=2500.0]"));
+  pos.Set ("X", StringValue ("ns3::ConstantRandomVariable[Constant=1500.0]"));
+  pos.Set ("Y", StringValue ("ns3::ConstantRandomVariable[Constant=1500.0]"));
 
   Ptr<PositionAllocator> positionAlloc2 = pos.Create ()->GetObject<PositionAllocator> ();  
   mobility.SetPositionAllocator (positionAlloc2);
@@ -464,7 +464,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
 
         Ptr<Node> node_source = NodeList::GetNode (i);
 		Simulator::Schedule (Seconds (m_dataStart), &TdmaExample::GenerateTraffic, this,
-					node_source, 256, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
+					node_source, 512, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
 	}
 
   }

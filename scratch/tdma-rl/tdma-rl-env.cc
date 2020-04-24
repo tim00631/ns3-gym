@@ -5,6 +5,7 @@
 #include <cstring>
 #include <iomanip>
 #include <sstream>
+#include <algorithm>
 
 namespace ns3 {
 
@@ -123,8 +124,8 @@ TdmaGymEnv::GetObservationSpace()
   // tdma queue top 3 packet bytes 
   uint32_t dataSlotNum = 32;
 
-  float low = -1;
-  float high = 3;
+  float low = 0;
+  float high = 4;
   std::vector<uint32_t> shape = {dataSlotNum, };
   std::string dtype = TypeNameGet<int32_t> ();
 
@@ -230,7 +231,8 @@ TdmaGymEnv::GetObservation()
   }
 
   int32_t nodeUsedList_top3Pkt[32];
-  memset(nodeUsedList_top3Pkt,-1,32*sizeof(int32_t));
+  //memset(nodeUsedList_top3Pkt,,32*sizeof(int32_t));
+  std::fill_n(nodeUsedList_top3Pkt,32,4);
 
   for (uint32_t i=0;i<32;i++)
   {
