@@ -109,9 +109,13 @@ class DeepQNetwork:
 
         batch_memory = self.memory[sample_index, :]
 
-        q_next = self.target_model.predict(batch_memory[:, -self.params['n_states']:])
+        q_next = self.target_model.predict(batch_memory[:, -self.params['n_states']:])[0]
         q_eval = self.eval_model.predict(batch_memory[:, :self.params['n_states']])
-
+        
+        q_index = self.eval_model.predict(batch_memory[:, -self.params['n_states']:])[0]
+        q_index = np.argmax(q_index)
+        
+        
         # change q_target w.r.t q_eval's action
         q_target = q_eval.copy()
 
@@ -119,7 +123,9 @@ class DeepQNetwork:
         eval_act_index = batch_memory[:, self.params['n_states']].astype(int)
         reward = batch_memory[:, self.params['n_states'] + 1]
 
-        q_target[batch_index, eval_act_index] = reward + self.params['reward_decay'] * np.max(q_next, axis=1)
+        # using the eval_net argmax as index to get the target_net max reward
+        #q_target[batch_index, eval_act_index] = reward + self.params['reward_decay'] * np.max(q_next, axis=1)
+        q_target[batch_index, eval_act_index] = reward + self.params['reward_decay'] * q_next[q_index]
 
         # check to replace target parameters
         if self.learn_step_counter % self.params['replace_target_iter'] == 0:
