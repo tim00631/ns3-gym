@@ -8,13 +8,13 @@ class Eval_Model(tf.keras.Model):
     def __init__(self, num_actions):
         super().__init__('mlp_q_network')
         self.input_layer = tf.keras.layers.InputLayer(input_shape=(35,),dtype='float32')
-        self.hidden_layers = layers.Dense(35,kernel_initializer='RandomNormal')
+        self.hidden_layers = layers.Dense(35,kernel_initializer='RandomNormal',activation='relu')
         self.logits = layers.Dense(num_actions, activation=None)
 
     def call(self, inputs):
         x = self.input_layer(inputs)
         x = self.hidden_layers(x)
-        x = tf.keras.layers.LeakyReLU(alpha=0.3)(x)
+        #x = tf.keras.layers.LeakyReLU(alpha=0.3)(x)
         logits = self.logits(x)
         return logits
 
@@ -23,13 +23,13 @@ class Target_Model(tf.keras.Model):
     def __init__(self, num_actions):
         super().__init__('mlp_q_network_1')
         self.input_layer = tf.keras.layers.InputLayer(input_shape=(35,),dtype='float32')
-        self.hidden_layers = layers.Dense(35, trainable=False)
+        self.hidden_layers = layers.Dense(35, trainable=False,activation='relu')
         self.logits = layers.Dense(num_actions, trainable=False, activation=None)
 
     def call(self, inputs):
         x = self.input_layer(inputs)
         x = self.hidden_layers(x)
-        x = tf.keras.layers.LeakyReLU(alpha=0.3)(x)
+        #x = tf.keras.layers.LeakyReLU(alpha=0.3)(x)
         logits = self.logits(x)
         return logits
 

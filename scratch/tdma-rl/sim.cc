@@ -164,7 +164,7 @@ int main (int argc, char **argv)
   cmd.Parse (argc, argv);
   
   RngSeedManager::SetSeed (1);
-  RngSeedManager::SetRun (663380072);
+  RngSeedManager::SetRun (simSeed);
 
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", StringValue ("1000")); // bytes!
   Config::SetDefault ("ns3::OnOffApplication::DataRate", StringValue (rate));
