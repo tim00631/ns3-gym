@@ -128,7 +128,7 @@ TdmaController::TdmaController ()
 		m_activeEpoch (false),
 		m_tdmaMode (CENTRALIZED),
     m_channel (0),
-    m_usedslotPenalty (-10),
+    m_usedslotPenalty (-1),
     m_collisionPenalty (-0.02),
     m_delayReward (10),
     m_queuingBytesThreshold (GetSlotTime()*GetDataRate() / 8 * (1/3))
