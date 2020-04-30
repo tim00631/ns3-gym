@@ -137,7 +137,6 @@ private:
   uint32_t m_count[2];
   Ptr<TdmaMac> m_macPtr;
   TdmaMacTxDropCallback m_txDropCallback;
-  uint32_t m_queuingBytes; // Calculate the queuing bytes in data queue
 };
 
 } // namespace ns3

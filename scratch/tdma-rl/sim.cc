@@ -421,7 +421,13 @@ TdmaExample::InstallApplications (bool selfGenerate)
 {
   if (selfGenerate)
   {
-
+    for (uint32_t i=0;i<m_nWifis;i++)
+    {
+        Ptr<Node> node = NodeList::GetNode (i);
+		Ptr<Socket> sink = SetupPacketReceive (Ipv4Address::GetAny(),node);
+    }
+      
+      
 	for (uint32_t i=0;i<m_nWifis;i++)
 	{
         /*
@@ -442,8 +448,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
 			
 		}
         */
-        Ptr<Node> node = NodeList::GetNode (i);
-		Ptr<Socket> sink = SetupPacketReceive (Ipv4Address::GetAny(),node);
+        
 		std::map<Ipv4Address,Ptr<Socket>> ip2socket;
 
 		for(uint32_t j=0;j<m_nWifis;j++)
@@ -451,8 +456,8 @@ TdmaExample::InstallApplications (bool selfGenerate)
 			if(i == j) continue;
 			
 			TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  			Ptr<Socket> source = Socket::CreateSocket (nodes.Get (j), tid);
-		  	InetSocketAddress remote = InetSocketAddress (interfaces.GetAddress (i, 0), port);
+  			Ptr<Socket> source = Socket::CreateSocket (nodes.Get (i), tid);
+		  	InetSocketAddress remote = InetSocketAddress (interfaces.GetAddress (j, 0), port);
 		  	source->Connect (remote);
 			
 			ip2socket.insert(std::make_pair(interfaces.GetAddress (j, 0),source));	

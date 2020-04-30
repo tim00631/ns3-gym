@@ -31,7 +31,7 @@ TdmaGymEnv::TdmaGymEnv ()
 	m_ip2id.insert(std::pair<Ipv4Address,uint32_t>(addr,i));
   }
 */
-  Simulator::Schedule (NanoSeconds(0.0), &TdmaGymEnv::ScheduleNextStateRead, this);
+  Simulator::Schedule (NanoSeconds(10.0), &TdmaGymEnv::ScheduleNextStateRead, this);
 
 }
 
@@ -51,7 +51,7 @@ TdmaGymEnv::TdmaGymEnv (Time stepInterval1, Time stepInterval2)
 	m_ip2id.insert(std::pair<Ipv4Address,uint32_t>(addr,i));
   }
 */
-  Simulator::Schedule (NanoSeconds(0.0), &TdmaGymEnv::ScheduleNextStateRead, this);
+  Simulator::Schedule (NanoSeconds(10.0), &TdmaGymEnv::ScheduleNextStateRead, this);
 
 }
 
@@ -369,7 +369,7 @@ TdmaGymEnv::ExecuteActions(Ptr<OpenGymDataContainer> action)
 
   }  
 
-  //m_tdmaDevice->GetTdmaController()->SendUsed(m_tdmaDevice);
+  m_tdmaDevice->GetTdmaController()->SendUsed(m_tdmaDevice);
   return true;
 }
 

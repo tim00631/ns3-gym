@@ -426,7 +426,7 @@ TdmaController::ScheduleTdmaSession (const uint32_t slotNum)
 			{
 				if ( slotNum < m_nNodes  ) // Control slot
 				{
-					SendUsed(it_status->second);
+					//SendUsed(it_status->second);
 				}
 			}
 		}
