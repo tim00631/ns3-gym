@@ -143,7 +143,10 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
 
   //std::cout<<"PacketUid: "<< packet->GetUid() <<", PacketHeader:  ";
   //std::cout<<packet->ToString()<<std::endl;
+  //NS_LOG_UNCOND("Insertpkt:size: " << packet->GetSize ()
+  //                                          << " uid: " << packet->GetUid ());
   
+    
   std::size_t idx_olsr = packet->ToString().find("olsr");
 
 
@@ -161,9 +164,14 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
   }
   else
   {
-  	if (m_size[0] == m_maxSize) return false;
+  	if (m_size[0] == m_maxSize) {
+        NS_LOG_UNCOND ("Queue max, Drop");
+        return false;
+    }
   	isCtrl = false;
-
+    NS_LOG_UNCOND ("Inserted packet of size: " << packet->GetSize ()
+                                            << " uid: " << packet->GetUid ());
+    NS_LOG_UNCOND (packet->ToString());
   }
   
   

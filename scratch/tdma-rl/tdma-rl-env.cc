@@ -205,7 +205,7 @@ TdmaGymEnv::GetObservation()
 {
   NS_LOG_FUNCTION (this);
 
-  
+  NS_LOG_UNCOND("Now: "<<Simulator::Now().GetNanoSeconds ());
   Ptr<Node> node = NodeList::GetNode (m_slotNum);
   Ptr<NetDevice> dev = node-> GetDevice(0);
   Ptr<TdmaNetDevice> m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
@@ -333,7 +333,7 @@ TdmaGymEnv::GetExtraInfo()
   
   if (Simulator::Now().GetSeconds () < 6) tdmaDataBytes = 0;
   else tdmaDataBytes = recvBytes / 16 / (Simulator::Now().GetSeconds () - 5);
-  //NS_LOG_UNCOND("Now: "<<Simulator::Now().GetSeconds ()<<", throughput: " << tdmaDataBytes << ", recv: "<<recvBytes);
+  //NS_LOG_UNCOND("Now: "<<Simulator::Now().GetNanoSeconds ());
   
     
   std::stringstream stream;
