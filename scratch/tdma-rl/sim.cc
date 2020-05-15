@@ -128,7 +128,7 @@ int main (int argc, char **argv)
   std::string rate ("8kbps");
   std::string appl = "all";
   uint32_t settlingTime = 6;
-  double dataStart = 10.0;
+  double dataStart = 5.0;
   double txpDistance = 1000.0;
   bool selfGenerate = true;
 
@@ -177,7 +177,7 @@ int main (int argc, char **argv)
 }
 
 TdmaExample::TdmaExample ()
-  : m_nWifis(30),
+  : m_nWifis(16),
 		m_Sink(1),
 		m_totalTime(300),
 	  m_rate ("8kbps"),
@@ -199,22 +199,15 @@ void
 TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
                              uint32_t remainTransmit, Time pktInterval , uint32_t pktNum)
 {
-  std::ostringstream oss;
-  oss <<"/NodeList/"<<nodeId<<"/$ns3::olsr::RoutingProtocol";
-  Config::MatchContainer m = Config::LookupMatches(oss.str());
-  std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = m.Get(0)->GetObject<ns3::olsr::RoutingProtocol>()->GetRoutingTableEntries();
-  
-  /*
   Ptr<Node> node = NodeList::GetNode (nodeId);
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries();
-  */
-         
-                                                   
+        
+  /*  
   NS_LOG_UNCOND("Routing table: Node:" << nodeId);
   for(auto rule:tdmaRoutingTable){
          NS_LOG_UNCOND(rule.destAddr);
   }
-  
+  */
   Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
   rng->SetAttribute ("Min",DoubleValue (0));
   rng->SetAttribute ("Max",DoubleValue (tdmaRoutingTable.size()-1));
@@ -227,7 +220,7 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
       rngVal = rng->GetValue();
       destAddr_NodeId = tdmaRoutingTable[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
   }
-  NS_LOG_UNCOND("destAddr_NodeId:"<<destAddr_NodeId);
+  //NS_LOG_UNCOND("destAddr_NodeId:"<<destAddr_NodeId);
   //std::random_shuffle (tdmaRoutingTable.begin(),tdmaRoutingTable.end());
   
   /*  
@@ -269,7 +262,7 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
 			packet = Create<Packet> ((uint8_t*) msg.str().c_str(), pktSize);
 			it->second->Send (packet);
 		}
-        NS_LOG_UNCOND("Time: "<<Simulator::Now ().GetNanoSeconds () << "ns,SendPacket:"<<packet->GetUid());
+        
       		Simulator::Schedule (pktInterval, &TdmaExample::GenerateTraffic, this,
                 	           nodeId, pktSize,remainTransmit - 1, pktInterval, pktNum);
 
@@ -398,7 +391,7 @@ TdmaExample::SetupMobility ()
   mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
 		  "Mode", StringValue ("Time"),
 //		  "Time", StringValue ("10s"), // Change direction per 10s
-		  "Speed", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=0.0]"), // Set speed = 5m/s
+		  "Speed", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=5.0]"), // Set speed = 5m/s
   		  "Bounds", RectangleValue (Rectangle (0, 3000, 0, 3000))); // walk boundary
   
   mobility.Install (nodes);
@@ -466,26 +459,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
       
 	for (uint32_t i=0;i<m_nWifis;i++)
 	{
-        /*
-		Ptr<Node> node = NodeList::GetNode (i);
-		Ptr<Socket> sink = SetupPacketReceive (Ipv4Address::GetAny(),node);
-		std::map<Ipv4Address,Ptr<Socket>> ip2socket;
-
-		for(uint32_t j=0;j<m_nWifis;j++)
-		{
-			if(i == j) continue;
-			
-			TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  			Ptr<Socket> source = Socket::CreateSocket (nodes.Get (j), tid);
-		  	InetSocketAddress remote = InetSocketAddress (interfaces.GetAddress (i, 0), port);
-		  	source->Connect (remote);
-			
-			ip2socket.insert(std::make_pair(interfaces.GetAddress (j, 0),source));	
-			
-		}
-        */
-        
-		/*
+    	/*
         Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
         rng->SetAttribute ("Min",DoubleValue (0));
         rng->SetAttribute ("Max",DoubleValue (m_nWifis-1));

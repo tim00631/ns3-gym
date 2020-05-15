@@ -156,22 +156,23 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
   	if (m_size[1] == m_maxSize) return false;
 	isCtrl = true;
   }
-  else if (idx_olsr != string::npos)
+  else if (idx_olsr != string::npos )
   {
-  	if (m_size[1] == m_maxSize) return false;
+  	if (m_size[1] == m_maxSize) return false; 
 
 	isCtrl = true;
   }
   else
   {
   	if (m_size[0] == m_maxSize) {
-        NS_LOG_UNCOND ("Queue max, Drop");
+        //NS_LOG_UNCOND ("Queue max");
         return false;
     }
   	isCtrl = false;
-    NS_LOG_UNCOND ("Inserted packet of size: " << packet->GetSize ()
-                                            << " uid: " << packet->GetUid ());
-    NS_LOG_UNCOND (packet->ToString());
+    
+    //NS_LOG_UNCOND ("Inserted packet of size: " << packet->GetSize ()
+    //                                        << " uid: " << packet->GetUid ());
+    //NS_LOG_UNCOND (packet->ToString());
   }
   
   

@@ -133,7 +133,7 @@ int main (int argc, char **argv)
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
   uint32_t pktNum = 30;
-  double pktInterval = 0.05;
+  double pktInterval = 0.04;
 
   srand(10000);
 
@@ -200,7 +200,12 @@ TdmaExample::GenerateTraffic (Ptr<Node> node, uint32_t pktSize,
 
   std::random_shuffle (tdmaRoutingTable.begin(),tdmaRoutingTable.end());
   
-  Ptr<Socket> socket;
+
+  std::cout<<"Routing table: Node:" << node->GetId()<<std::endl;
+  for(auto rule:tdmaRoutingTable){
+         std::cout<<rule.destAddr<<std::endl;
+  }  
+    
 
   if (tdmaRoutingTable.size() != 0)
   {

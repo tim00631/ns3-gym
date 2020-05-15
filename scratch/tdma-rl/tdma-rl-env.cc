@@ -378,7 +378,7 @@ TdmaGymEnv::ExecuteActions(Ptr<OpenGymDataContainer> action)
 
   }  
 
-  m_tdmaDevice->GetTdmaController()->SendUsed(m_tdmaDevice);
+
   return true;
 }
 
