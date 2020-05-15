@@ -495,14 +495,14 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
     
   }
 
-  
-/*   
+  /*
+ 
   // Search unused slot from UsedList
   std::vector<uint32_t> candidateList_unused;
   std::vector<uint32_t> unusedList_select;
 
  
-  uint32_t num = rand() % 4; // Num of slot the node need to use (0~3)
+  uint32_t num = 2; // Num of slot the node need to use (0~3)
   
   // Select the the unused slot in previous frame
   if (num != 0)
@@ -535,8 +535,8 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
 	
 	sort(unusedList_select.begin(),unusedList_select.end());
   }
-  
   */
+  
   
   
 

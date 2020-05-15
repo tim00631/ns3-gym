@@ -14,6 +14,7 @@ NS_LOG_COMPONENT_DEFINE ("TdmaGymEnv");
 
 NS_OBJECT_ENSURE_REGISTERED (TdmaGymEnv);
 
+//uint64_t recvBytes = 1;
 
 TdmaGymEnv::TdmaGymEnv ()
 {
@@ -245,7 +246,7 @@ TdmaGymEnv::GetObservation()
   for (uint32_t i=0;i<top3queuePktStatus.size();i++)
   {
 	//std::map<Ipv4Address,uint32_t>::iterator it = m_ip2id.find(top3queuePktStatus[i].first);
-    uint32_t topN_nodeId = top3queuePktStatus[i].first.CombineMask(Ipv4Mask(255)).Get();
+    uint32_t topN_nodeId = top3queuePktStatus[i].first.CombineMask(Ipv4Mask(255)).Get()-1;
 
 
 	for (uint32_t j=0;j<nodeUsedList.size();j++)
@@ -316,6 +317,7 @@ TdmaGymEnv::GetReward()
 /*
 Define extra info. Optional
 */
+ 
 std::string
 TdmaGymEnv::GetExtraInfo()
 {
@@ -327,11 +329,18 @@ TdmaGymEnv::GetExtraInfo()
   Ptr<TdmaNetDevice> m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
 
   float* reward = m_tdmaDevice->GetTdmaController()->GetRLReward(previous_slotNum);
+  int64_t tdmaDataBytes = 0;
   
+  if (Simulator::Now().GetSeconds () < 6) tdmaDataBytes = 0;
+  else tdmaDataBytes = recvBytes / 16 / (Simulator::Now().GetSeconds () - 5);
+  //NS_LOG_UNCOND("Now: "<<Simulator::Now().GetSeconds ()<<", throughput: " << tdmaDataBytes << ", recv: "<<recvBytes);
+  
+    
   std::stringstream stream;
   stream << std::fixed << std::setprecision(2) << *(reward) << ",";
   stream << std::fixed << std::setprecision(2) << *(reward+1) << ",";
-  stream << std::fixed << std::setprecision(2) << *(reward+2);
+  stream << std::fixed << std::setprecision(2) << *(reward+2) << ",";
+  stream << tdmaDataBytes;
   std::string Info = stream.str();
   
 

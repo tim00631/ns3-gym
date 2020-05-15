@@ -14,6 +14,8 @@
 
 #include <vector>
 
+extern uint64_t recvBytes;
+
 namespace ns3 {
 
 class Node;
@@ -47,7 +49,7 @@ private:
   uint32_t m_slotNum;
   uint32_t m_repeatChoose;
   
-  //std::map<Ipv4Address,uint32_t> m_ip2id; // Convert ipv4 to nodeId 
+
   Time m_stepInterval1; // skip to next ctrl slot (ctrl slot size)
   Time m_stepInterval2; // skip all data slot ( data slot num * data slot size)
 };

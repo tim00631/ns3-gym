@@ -165,8 +165,8 @@ TdmaMacLow::Receive (Ptr<Packet> packet)
      
       if(s.compare(0,10,"#TDMAUSED#") == 0)
       {
-	  std::string str = s.substr(10);
-	  m_device->GetTdmaController()->UpdateList(str,m_device->GetNode()->GetId());
+          std::string str = s.substr(10);
+          m_device->GetTdmaController()->UpdateList(str,m_device->GetNode()->GetId());
       }
     }
   else

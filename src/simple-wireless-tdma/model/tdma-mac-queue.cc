@@ -156,6 +156,7 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
   else if (idx_olsr != string::npos)
   {
   	if (m_size[1] == m_maxSize) return false;
+
 	isCtrl = true;
   }
   else
