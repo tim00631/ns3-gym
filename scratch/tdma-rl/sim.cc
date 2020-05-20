@@ -93,7 +93,8 @@ private:
   uint32_t m_interFrameGap;
   uint32_t m_pktNum;
   double m_pktInterval;
-  std::vector<std::map<Ipv4Address,Ptr<Socket>>> m_socketMap; 
+  //std::vector<std::map<Ipv4Address,Ptr<Socket>>> m_socketMap; 
+  std::vector<std::pair<Ipv4Address,Ptr<Socket>>> m_socketMap; 
   //std::vector<Ptr<Socket>> m_socketMap; 
 
   std::map<double, double> m_transmitRangeMap;
@@ -137,7 +138,7 @@ int main (int argc, char **argv)
   uint32_t slotTime = 1000 * 8 / 8000 * 1000000; // us
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
-  uint32_t pktNum = 20;
+  uint32_t pktNum = 15;
   double pktInterval = 0.04;
   uint32_t simSeed = 0;
   //srand(30000);
@@ -161,7 +162,7 @@ int main (int argc, char **argv)
   cmd.Parse (argc, argv);
   
   RngSeedManager::SetSeed (1);
-  RngSeedManager::SetRun (388119029);
+  RngSeedManager::SetRun (388119020);
   //RngSeedManager::SetRun (simSeed);
 
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", StringValue ("1000")); // bytes!
@@ -199,15 +200,26 @@ void
 TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
                              uint32_t remainTransmit, Time pktInterval , uint32_t pktNum)
 {
+  
   Ptr<Node> node = NodeList::GetNode (nodeId);
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries();
-        
-  /*  
+  
+  NS_LOG_UNCOND("Node:" << nodeId << ".want to send to "<< m_socketMap[nodeId].first);
   NS_LOG_UNCOND("Routing table: Node:" << nodeId);
+    
   for(auto rule:tdmaRoutingTable){
          NS_LOG_UNCOND(rule.destAddr);
   }
-  */
+  
+  bool inRoutingTable = false;
+  for(auto rule:tdmaRoutingTable){
+      if (rule.destAddr == m_socketMap[nodeId].first){
+          inRoutingTable = true;
+          break;
+      }
+  }
+  
+  /*
   Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
   rng->SetAttribute ("Min",DoubleValue (0));
   rng->SetAttribute ("Max",DoubleValue (tdmaRoutingTable.size()-1));
@@ -220,34 +232,38 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
       rngVal = rng->GetValue();
       destAddr_NodeId = tdmaRoutingTable[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
   }
-  //NS_LOG_UNCOND("destAddr_NodeId:"<<destAddr_NodeId);
+  */
+
   //std::random_shuffle (tdmaRoutingTable.begin(),tdmaRoutingTable.end());
   
-  /*  
+  
   if (remainTransmit > 0)
   {
 	std::ostringstream msg; msg << "Hello World!" << '\0';
 	Ptr<Packet> packet;
-   
-	for (uint32_t i=0;i<pktNum;i++)
-	{
-		packet = Create<Packet> ((uint8_t*) msg.str().c_str(), pktSize);
-		m_socketMap[nodeId]->Send (packet);
-	}
-	NS_LOG_UNCOND("SendPacket:"<<packet->GetUid());
-    	Simulator::Schedule (pktInterval, &TdmaExample::GenerateTraffic, this,
+    if (inRoutingTable){
+        for (uint32_t i=0;i<pktNum;i++)
+        {
+            packet = Create<Packet> ((uint8_t*) msg.str().c_str(), pktSize);
+            m_socketMap[nodeId].second->Send (packet);
+        }
+        //NS_LOG_UNCOND("SendPacket:"<<packet->GetUid());
+    }
+    //else NS_LOG_UNCOND("Not in routing table");
+	
+    Simulator::Schedule (pktInterval, &TdmaExample::GenerateTraffic, this,
                	           nodeId, pktSize,remainTransmit - 1, pktInterval, pktNum);
 
   }
   else if (remainTransmit <= 0)
   {
-	m_socketMap[nodeId]->Close();
+	m_socketMap[nodeId].second->Close();
         
   }
-  */
   
   
   
+  /*
   if (tdmaRoutingTable.size() != 0)
   {
   	std::map<Ipv4Address,Ptr<Socket>>::iterator it = m_socketMap[nodeId].find(tdmaRoutingTable[rngVal].destAddr);
@@ -273,7 +289,7 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
         
 	}
   }
-  
+  */
   
 }
 
@@ -386,16 +402,16 @@ TdmaExample::SetupMobility ()
   Ptr<PositionAllocator> positionAlloc = pos.Create ()->GetObject<PositionAllocator> ();  
   mobility.SetPositionAllocator (positionAlloc);
 
-  
+  /*
   // Set Random walk model
   mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
 		  "Mode", StringValue ("Time"),
 //		  "Time", StringValue ("10s"), // Change direction per 10s
-		  "Speed", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=5.0]"), // Set speed = 5m/s
+		  "Speed", StringValue ("ns3::UniformRandomVariable[Min=3.0|Max=5.0]"), // Set speed = 5m/s
   		  "Bounds", RectangleValue (Rectangle (0, 3000, 0, 3000))); // walk boundary
-  
+  */
   mobility.Install (nodes);
-/*
+
   pos.Set ("X", StringValue ("ns3::ConstantRandomVariable[Constant=1500.0]"));
   pos.Set ("Y", StringValue ("ns3::ConstantRandomVariable[Constant=1500.0]"));
 
@@ -403,7 +419,7 @@ TdmaExample::SetupMobility ()
   mobility.SetPositionAllocator (positionAlloc2);
  
   mobility.Install (nodes.Get(0));
-*/
+
   //AsciiTraceHelper ascii;
   //MobilityHelper::EnableAsciiAll (ascii.CreateFileStream ("/test/mobility-trace-example.mob"));
 }
@@ -459,7 +475,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
       
 	for (uint32_t i=0;i<m_nWifis;i++)
 	{
-    	/*
+    	
         Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
         rng->SetAttribute ("Min",DoubleValue (0));
         rng->SetAttribute ("Max",DoubleValue (m_nWifis-1));
@@ -467,13 +483,16 @@ TdmaExample::InstallApplications (bool selfGenerate)
         uint32_t rngVal = rng->GetValue();
         while(i == rngVal) rngVal = rng->GetValue();
         
+        NS_LOG_UNCOND("Node:"<<i<<", would send to Node:"<<rngVal);
+        
         TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
   		Ptr<Socket> source = Socket::CreateSocket (nodes.Get (i), tid);
 		InetSocketAddress remote = InetSocketAddress (interfaces.GetAddress (rngVal, 0), port);
 		source->Connect (remote);
         
-        m_socketMap.push_back(source);
-        */
+        m_socketMap.push_back(std::make_pair(interfaces.GetAddress (rngVal, 0),source));
+        
+        /*
         std::map<Ipv4Address,Ptr<Socket>> ip2socket;
         
 		for(uint32_t j=0;j<m_nWifis;j++)
@@ -490,7 +509,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
 		}
         
         m_socketMap.push_back(ip2socket);
-        
+        */
         
 		
 

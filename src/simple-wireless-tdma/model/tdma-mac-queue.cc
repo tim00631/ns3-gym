@@ -148,7 +148,7 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
   
     
   std::size_t idx_olsr = packet->ToString().find("olsr");
-
+  std::size_t idx_arp = packet->ToString().find("Arp");
 
   bool isCtrl = false;
   if (s.compare(0,5,"#TDMA") == 0 )
@@ -156,7 +156,7 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
   	if (m_size[1] == m_maxSize) return false;
 	isCtrl = true;
   }
-  else if (idx_olsr != string::npos )
+  else if (idx_olsr != string::npos || idx_arp != string::npos)
   {
   	if (m_size[1] == m_maxSize) return false; 
 
@@ -368,13 +368,14 @@ TdmaMacQueue::GetQueuingBytes (void)
 {
     
   uint32_t queuingBytes = 0;
-  bool isCtrl = false;
-  for (PacketQueueI i = m_queue[isCtrl].begin (); i != m_queue[isCtrl].end (); )
+  //bool isCtrl = false;
+  for (PacketQueueI i = m_queue[0].begin (); i != m_queue[0].end (); )
   {
       queuingBytes += i->packet->GetSize ();
       i++;
   }
     
+  //NS_LOG_UNCOND("Queue size:"<<m_queue[0].size());
   return queuingBytes;
 }
 
