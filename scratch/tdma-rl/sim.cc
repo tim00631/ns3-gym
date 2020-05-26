@@ -93,9 +93,9 @@ private:
   uint32_t m_interFrameGap;
   uint32_t m_pktNum;
   double m_pktInterval;
-  //std::vector<std::map<Ipv4Address,Ptr<Socket>>> m_socketMap; 
-  std::vector<std::pair<Ipv4Address,Ptr<Socket>>> m_socketMap; 
-  //std::vector<Ptr<Socket>> m_socketMap; 
+  std::vector<std::map<Ipv4Address,Ptr<Socket>>> m_socketMap; 
+  //std::vector<std::pair<Ipv4Address,Ptr<Socket>>> m_socketMap; 
+
 
   std::map<double, double> m_transmitRangeMap;
 
@@ -204,13 +204,13 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
   Ptr<Node> node = NodeList::GetNode (nodeId);
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries();
   
-  NS_LOG_UNCOND("Node:" << nodeId << ".want to send to "<< m_socketMap[nodeId].first);
+  //NS_LOG_UNCOND("Node:" << nodeId << ".want to send to "<< m_socketMap[nodeId].first);
   NS_LOG_UNCOND("Routing table: Node:" << nodeId);
     
   for(auto rule:tdmaRoutingTable){
          NS_LOG_UNCOND(rule.destAddr);
   }
-  
+  /*
   bool inRoutingTable = false;
   for(auto rule:tdmaRoutingTable){
       if (rule.destAddr == m_socketMap[nodeId].first){
@@ -218,8 +218,8 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
           break;
       }
   }
+  */
   
-  /*
   Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
   rng->SetAttribute ("Min",DoubleValue (0));
   rng->SetAttribute ("Max",DoubleValue (tdmaRoutingTable.size()-1));
@@ -232,11 +232,11 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
       rngVal = rng->GetValue();
       destAddr_NodeId = tdmaRoutingTable[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
   }
-  */
+  
 
   //std::random_shuffle (tdmaRoutingTable.begin(),tdmaRoutingTable.end());
   
-  
+  /*
   if (remainTransmit > 0)
   {
 	std::ostringstream msg; msg << "Hello World!" << '\0';
@@ -260,10 +260,10 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
 	m_socketMap[nodeId].second->Close();
         
   }
+  */
   
   
   
-  /*
   if (tdmaRoutingTable.size() != 0)
   {
   	std::map<Ipv4Address,Ptr<Socket>>::iterator it = m_socketMap[nodeId].find(tdmaRoutingTable[rngVal].destAddr);
@@ -289,7 +289,7 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
         
 	}
   }
-  */
+  
   
 }
 
@@ -402,14 +402,14 @@ TdmaExample::SetupMobility ()
   Ptr<PositionAllocator> positionAlloc = pos.Create ()->GetObject<PositionAllocator> ();  
   mobility.SetPositionAllocator (positionAlloc);
 
-  /*
+  
   // Set Random walk model
   mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
 		  "Mode", StringValue ("Time"),
 //		  "Time", StringValue ("10s"), // Change direction per 10s
 		  "Speed", StringValue ("ns3::UniformRandomVariable[Min=3.0|Max=5.0]"), // Set speed = 5m/s
   		  "Bounds", RectangleValue (Rectangle (0, 3000, 0, 3000))); // walk boundary
-  */
+  
   mobility.Install (nodes);
 
   pos.Set ("X", StringValue ("ns3::ConstantRandomVariable[Constant=1500.0]"));
@@ -475,7 +475,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
       
 	for (uint32_t i=0;i<m_nWifis;i++)
 	{
-    	
+    	/*
         Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
         rng->SetAttribute ("Min",DoubleValue (0));
         rng->SetAttribute ("Max",DoubleValue (m_nWifis-1));
@@ -491,8 +491,8 @@ TdmaExample::InstallApplications (bool selfGenerate)
 		source->Connect (remote);
         
         m_socketMap.push_back(std::make_pair(interfaces.GetAddress (rngVal, 0),source));
+        */
         
-        /*
         std::map<Ipv4Address,Ptr<Socket>> ip2socket;
         
 		for(uint32_t j=0;j<m_nWifis;j++)
@@ -509,7 +509,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
 		}
         
         m_socketMap.push_back(ip2socket);
-        */
+        
         
 		
 
