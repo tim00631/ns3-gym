@@ -166,29 +166,32 @@ class DeepQNetwork:
 
         # initialize zero memory [s, a, r, s_]
         self.epsilon = 0 if self.params['e_greedy_increment'] is not None else self.params['e_greedy']
-        #self.memory = np.zeros((self.params['memory_size'], self.params['n_states'] * 2 + 2))
+        self.memory = np.zeros((self.params['memory_size'], self.params['n_states'] * 2 + 2))
         
         # initalize prioritized memory
-        self.memory = Memory(capacity=memory_size)
+        #self.memory = Memory(capacity=memory_size)
 
         self.eval_model = eval_model
         self.target_model = target_model
 
         self.eval_model.compile(
             optimizer=RMSprop(lr=self.params['learning_rate']),
-            loss=self._per_loss
+            loss='mse'
+            #loss=self._per_loss
         )
         self.cost_his = []
         
+        """
         # prioritized memory weight
         self.beta = 0.4
         self.is_weight = np.power(memory_size, -self.beta)  # because p1 == 1
+        """
         
     def _per_loss(self, y_target, y_pred):
         return tf.reduce_mean(self.is_weight * tf.math.squared_difference(y_target, y_pred))
         
     def store_transition(self, s, a, r, s_):
-        """
+        
         if not hasattr(self, 'memory_counter'):
             self.memory_counter = 0
 
@@ -199,12 +202,13 @@ class DeepQNetwork:
         self.memory[index, :] = transition
 
         self.memory_counter += 1
-        """
         
+        """
         # Store in transition
         transition = np.hstack((s, [a, r], s_))
         self.memory.store(transition)    # have high priority for newly arrived transition
-
+        """
+        
     def choose_action(self, observation, isTraining=True):
         # to have batch dimension when feed into tf placeholder
         observation = observation[np.newaxis, :]
@@ -227,7 +231,7 @@ class DeepQNetwork:
 
     def learn(self):
         
-        """
+        
         # sample batch memory from all memory
         if self.memory_counter > self.params['memory_size']:
             sample_index = np.random.choice(self.params['memory_size'], size=self.params['batch_size'])
@@ -235,9 +239,9 @@ class DeepQNetwork:
             sample_index = np.random.choice(self.memory_counter, size=self.params['batch_size'])
 
         batch_memory = self.memory[sample_index, :]
-        """
-        # Sample from memory
-        tree_idx, batch_memory, self.is_weight = self.memory.sample(self.params['batch_size'])
+        
+        # Sample from sumTree memory
+        #tree_idx, batch_memory, self.is_weight = self.memory.sample(self.params['batch_size'])
         
         q_next = self.target_model.predict(batch_memory[:, -self.params['n_states']:])[0]
         q_eval = self.eval_model.predict(batch_memory[:, :self.params['n_states']])
@@ -290,8 +294,8 @@ class DeepQNetwork:
         self.cost = self.eval_model.train_on_batch(batch_memory[:, :self.params['n_states']], q_target)
 
         # Update prioritized memory
-        abs_errors = tf.reduce_sum(tf.abs(q_target - q_eval), axis=1)    # for updating Sumtree
-        self.memory.batch_update(tree_idx, abs_errors)
+        #abs_errors = tf.reduce_sum(tf.abs(q_target - q_eval), axis=1)    # for updating Sumtree
+        #self.memory.batch_update(tree_idx, abs_errors)
         
         self.cost_his.append(self.cost)
 
