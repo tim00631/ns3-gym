@@ -335,12 +335,17 @@ TdmaGymEnv::GetExtraInfo()
   else tdmaDataBytes = recvBytes / 16 / (Simulator::Now().GetSeconds () - 5);
   //NS_LOG_UNCOND("Now: "<<Simulator::Now().GetNanoSeconds ());
   
+  uint64_t avgDelay = 0;
+  if (recvPacket == 0) avgDelay = 0;
+  else avgDelay = totalDelay/recvPacket;
+    
     
   std::stringstream stream;
   stream << std::fixed << std::setprecision(2) << *(reward) << ",";
   stream << std::fixed << std::setprecision(2) << *(reward+1) << ",";
   stream << std::fixed << std::setprecision(2) << *(reward+2) << ",";
-  stream << tdmaDataBytes;
+  stream << tdmaDataBytes<<",";
+  stream << avgDelay;
   std::string Info = stream.str();
   
 

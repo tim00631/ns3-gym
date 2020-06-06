@@ -42,6 +42,8 @@
 #include "ns3/llc-snap-header.h"
 #include "ns3/olsr-routing-protocol.h"
 #include "ns3/object.h"
+#include "ns3/stats-module.h"
+#include "wifi-example-apps.h"
 
 #include "ns3/opengym-module.h"
 #include "tdma-rl-env.h"
@@ -53,6 +55,8 @@
 using namespace ns3;
 
 uint64_t recvBytes = 0;
+uint64_t totalDelay = 0;
+uint64_t recvPacket = 0;
 
 uint16_t port = 8080;
 uint32_t openGymPort = 5555;
@@ -130,7 +134,7 @@ int main (int argc, char **argv)
   std::string rate ("8kbps");
   std::string appl = "all";
   uint32_t settlingTime = 6;
-  double dataStart = 5.0;
+  double dataStart = 10.0;
   double txpDistance = 1000.0;
   bool selfGenerate = true;
 
@@ -140,7 +144,7 @@ int main (int argc, char **argv)
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
   uint32_t pktNum = 20;
-  double pktInterval = 0.04;
+  double pktInterval = 0.08;
   uint32_t simSeed = 0;
   //srand(30000);
 
@@ -163,7 +167,8 @@ int main (int argc, char **argv)
   cmd.Parse (argc, argv);
   
   RngSeedManager::SetSeed (1);
-  RngSeedManager::SetRun (2680958325);
+  //RngSeedManager::SetRun (2680958325);
+  RngSeedManager::SetRun (2680958311);
   //RngSeedManager::SetRun (simSeed);
 
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", StringValue ("1000")); // bytes!
@@ -211,8 +216,11 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
   bool isConnect = false; 
    
   for(auto rule:tdmaRoutingTable){
+      if (m_lastSocket[nodeId].first == rule.destAddr) {
+          NS_LOG_UNCOND ("dest:");
+          isConnect = true;
+      }
       NS_LOG_UNCOND(rule.destAddr);
-      if (m_lastSocket[nodeId].first == rule.destAddr) isConnect = true;
   }
   /*
   bool inRoutingTable = false;
@@ -225,16 +233,15 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
   */
   uint32_t rngVal = 0;  
     
-  if (!isConnect) {
+  if (!isConnect && tdmaRoutingTable.size() != 0) {
       Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
       rng->SetAttribute ("Min",DoubleValue (0));
       rng->SetAttribute ("Max",DoubleValue (tdmaRoutingTable.size()-1));
   
       rngVal = rng->GetValue();
   
-  
       uint32_t destAddr_NodeId = tdmaRoutingTable[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
-      while (destAddr_NodeId == nodeId){
+      while (destAddr_NodeId == nodeId ){
           rngVal = rng->GetValue();
           destAddr_NodeId = tdmaRoutingTable[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
       }
@@ -290,10 +297,15 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
 	{
 		std::ostringstream msg; msg << "Hello World!" << '\0';
 		Ptr<Packet> packet;
-   
+        
+        TimestampTag timestamp;
+        timestamp.SetTimestamp (Simulator::Now ());
+        
+        
 		for (uint32_t i=0;i<pktNum;i++)
 		{
 			packet = Create<Packet> ((uint8_t*) msg.str().c_str(), pktSize);
+            packet->AddPacketTag (timestamp);
 			socket->Send (packet);
 		}
         
@@ -319,11 +331,20 @@ TdmaExample::ReceivePacket (Ptr <Socket> socket)
 {
   std::cout <<"Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node "<< socket->GetNode()->GetId() << " Received one packet!" << std::endl;
   NS_LOG_UNCOND("Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node "<< socket->GetNode()->GetId() << " Received one packet!");
+    
+    
   Ptr <Packet> packet;
   while ((packet = socket->Recv ()))
   {
-      	recvBytes += packet->GetSize ();
-      	packetsReceived += 1;
+      TimestampTag tagCopy;
+      packet->PeekPacketTag (tagCopy);
+      
+      NS_LOG_UNCOND("packet delay: "<<Simulator::Now ().GetMicroSeconds () - tagCopy.GetTimestamp().GetMicroSeconds () << "μs");
+      totalDelay += Simulator::Now ().GetMicroSeconds () - tagCopy.GetTimestamp().GetMicroSeconds ();
+      recvPacket += 1;
+      
+      recvBytes += packet->GetSize ();
+      packetsReceived += 1;
     }
 
   }
@@ -413,32 +434,41 @@ TdmaExample::SetupMobility ()
   MobilityHelper mobility;
 
  // Random initial position
+  /*
   ObjectFactory pos;
   pos.SetTypeId ("ns3::RandomRectanglePositionAllocator");
-  pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=1000.0|Max=3000.0]"));
-  pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=1000.0|Max=3000.0]"));
+  pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=500.0|Max=3500.0]"));
+  pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=500.0|Max=3500.0]"));
 
   Ptr<PositionAllocator> positionAlloc = pos.Create ()->GetObject<PositionAllocator> ();  
   mobility.SetPositionAllocator (positionAlloc);
-
+  */
+  
+  mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
+                                 "MinX", DoubleValue (500.0),
+                                 "MinY", DoubleValue (500.0),
+                                 "DeltaX", DoubleValue (300),
+                                 "DeltaY", DoubleValue (300),
+                                 "GridWidth", UintegerValue (4),
+                                 "LayoutType", StringValue ("RowFirst"));
   
   // Set Random walk model
   mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
 		  "Mode", StringValue ("Time"),
 //		  "Time", StringValue ("10s"), // Change direction per 10s
-		  "Speed", StringValue ("ns3::UniformRandomVariable[Min=3.0|Max=5.0]"), // Set speed = 5m/s
+		  "Speed", StringValue ("ns3::UniformRandomVariable[Min=5.0|Max=10.0]"), // Set speed = 5m/s
   		  "Bounds", RectangleValue (Rectangle (0, 4000, 0, 4000))); // walk boundary
   
   mobility.Install (nodes);
-
-  pos.Set ("X", StringValue ("ns3::ConstantRandomVariable[Constant=2500.0]"));
-  pos.Set ("Y", StringValue ("ns3::ConstantRandomVariable[Constant=2500.0]"));
+/*
+  pos.Set ("X", StringValue ("ns3::ConstantRandomVariable[Constant=2000.0]"));
+  pos.Set ("Y", StringValue ("ns3::ConstantRandomVariable[Constant=2000.0]"));
 
   Ptr<PositionAllocator> positionAlloc2 = pos.Create ()->GetObject<PositionAllocator> ();  
   mobility.SetPositionAllocator (positionAlloc2);
  
   mobility.Install (nodes.Get(0));
-
+*/
   //AsciiTraceHelper ascii;
   //MobilityHelper::EnableAsciiAll (ascii.CreateFileStream ("/test/mobility-trace-example.mob"));
 }

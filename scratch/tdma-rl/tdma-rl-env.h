@@ -15,6 +15,8 @@
 #include <vector>
 
 extern uint64_t recvBytes;
+extern uint64_t totalDelay;
+extern uint64_t recvPacket;
 
 namespace ns3 {
 

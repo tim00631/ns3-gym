@@ -548,7 +548,7 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   // Use the unused slot in unusedList_select
   for (uint32_t i=0;i<32;i++)
   {
-	//if ( counter < num && i == unusedList_select[counter] ) 
+	//if ( counter < num && unusedList_select.size()!=0 && i == unusedList_select[counter] ) 
 	if ( counter < m_tdmaRLAction.size() && i == m_tdmaRLAction[counter] ) 
 	{
     if (m_tdmaUsedListCur[device->GetNode()->GetId()][i].first != 0)
