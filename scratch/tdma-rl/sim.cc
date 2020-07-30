@@ -144,7 +144,7 @@ int main (int argc, char **argv)
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
   uint32_t pktNum = 20;
-  double pktInterval = 0.08;
+  double pktInterval = 0.04;
   uint32_t simSeed = 0;
   //srand(30000);
 
@@ -241,7 +241,7 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
       rngVal = rng->GetValue();
   
       uint32_t destAddr_NodeId = tdmaRoutingTable[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
-      while (destAddr_NodeId == nodeId ){
+      while (destAddr_NodeId == nodeId || tdmaRoutingTable[rngVal].distance !=1){
           rngVal = rng->GetValue();
           destAddr_NodeId = tdmaRoutingTable[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
       }
@@ -447,8 +447,8 @@ TdmaExample::SetupMobility ()
   mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
                                  "MinX", DoubleValue (500.0),
                                  "MinY", DoubleValue (500.0),
-                                 "DeltaX", DoubleValue (300),
-                                 "DeltaY", DoubleValue (300),
+                                 "DeltaX", DoubleValue (400),
+                                 "DeltaY", DoubleValue (400),
                                  "GridWidth", UintegerValue (4),
                                  "LayoutType", StringValue ("RowFirst"));
   
