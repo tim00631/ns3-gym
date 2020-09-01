@@ -244,6 +244,7 @@ class DeepQNetwork:
         tree_idx, batch_memory, self.is_weight = self.memory.sample(self.params['batch_size'])
         
         q_next = self.target_model.predict(batch_memory[:, -self.params['n_states']:])[0]
+        #q_next = self.target_model.predict(batch_memory[:, -self.params['n_states']:])
         q_eval = self.eval_model.predict(batch_memory[:, :self.params['n_states']])
         
         q_index = self.eval_model.predict(batch_memory[:, -self.params['n_states']:])[0]

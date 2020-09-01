@@ -143,7 +143,7 @@ int main (int argc, char **argv)
   uint32_t slotTime = 1000 * 8 / 8000 * 1000000; // us
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
-  uint32_t pktNum = 20;
+  uint32_t pktNum = 5;
   double pktInterval = 0.04;
   uint32_t simSeed = 0;
   //srand(30000);
@@ -209,18 +209,19 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
   
   Ptr<Node> node = NodeList::GetNode (nodeId);
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries();
-  
+  std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable_twohops;
   //NS_LOG_UNCOND("Node:" << nodeId << ".want to send to "<< m_socketMap[nodeId].first);
   NS_LOG_UNCOND("Routing table: Node:" << nodeId);
     
   bool isConnect = false; 
    
   for(auto rule:tdmaRoutingTable){
-      if (m_lastSocket[nodeId].first == rule.destAddr) {
+      if (m_lastSocket[nodeId].first == rule.destAddr && remainTransmit != 7000) {
           NS_LOG_UNCOND ("dest:");
           isConnect = true;
       }
-      NS_LOG_UNCOND(rule.destAddr);
+      NS_LOG_UNCOND(rule.destAddr << " : dis=" <<rule.distance);
+      if (rule.distance > 1 ) tdmaRoutingTable_twohops.push_back(rule);
   }
   /*
   bool inRoutingTable = false;
@@ -231,9 +232,32 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
       }
   }
   */
-  uint32_t rngVal = 0;  
+  
+  
     
-  if (!isConnect && tdmaRoutingTable.size() != 0) {
+  uint32_t rngVal = 0;  
+  if (!isConnect && tdmaRoutingTable_twohops.size() != 0) {
+      Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
+      rng->SetAttribute ("Min",DoubleValue (0));
+      rng->SetAttribute ("Max",DoubleValue (tdmaRoutingTable_twohops.size()-1));
+  
+      rngVal = rng->GetValue();
+  
+      uint32_t destAddr_NodeId = tdmaRoutingTable_twohops[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
+      while (destAddr_NodeId == nodeId){
+          rngVal = rng->GetValue();
+          destAddr_NodeId = tdmaRoutingTable_twohops[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
+      }
+      
+      for(uint32_t i=0;i<tdmaRoutingTable.size();i++){
+          if (destAddr_NodeId == tdmaRoutingTable[i].destAddr.CombineMask(Ipv4Mask(255)).Get()-1){
+              rngVal = i;
+              break;
+          }
+      }
+  }
+    
+  else if (!isConnect && tdmaRoutingTable.size() != 0) {
       Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
       rng->SetAttribute ("Min",DoubleValue (0));
       rng->SetAttribute ("Max",DoubleValue (tdmaRoutingTable.size()-1));
@@ -241,7 +265,7 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
       rngVal = rng->GetValue();
   
       uint32_t destAddr_NodeId = tdmaRoutingTable[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
-      while (destAddr_NodeId == nodeId || tdmaRoutingTable[rngVal].distance !=1){
+      while (destAddr_NodeId == nodeId || tdmaRoutingTable[rngVal].distance ==1){
           rngVal = rng->GetValue();
           destAddr_NodeId = tdmaRoutingTable[rngVal].destAddr.CombineMask(Ipv4Mask(255)).Get()-1;
       }
