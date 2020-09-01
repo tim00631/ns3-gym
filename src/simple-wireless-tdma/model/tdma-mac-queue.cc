@@ -355,12 +355,12 @@ TdmaMacQueue::GetPktStatus ()
           return l.second >= r.second;
 	    });
  
-  uint32_t topN = queuePktStatus.size() > 3 ? 3 : queuePktStatus.size(); 
-  std::vector<std::pair<Ipv4Address,uint32_t>> top3queuePktStatus(queuePktStatus.begin(),queuePktStatus.begin()+topN);
+  //uint32_t topN = queuePktStatus.size() > 3 ? 3 : queuePktStatus.size(); 
+  //std::vector<std::pair<Ipv4Address,uint32_t>> top3queuePktStatus(queuePktStatus.begin(),queuePktStatus.begin()+topN);
 
 
-  return top3queuePktStatus;
-  //return queuePktStatus;
+  //return top3queuePktStatus;
+  return queuePktStatus;
 }
 
 uint32_t

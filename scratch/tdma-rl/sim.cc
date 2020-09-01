@@ -216,7 +216,7 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
   bool isConnect = false; 
    
   for(auto rule:tdmaRoutingTable){
-      if (m_lastSocket[nodeId].first == rule.destAddr && remainTransmit != 7000) {
+      if (m_lastSocket[nodeId].first == rule.destAddr){ // && remainTransmit != 7000) {
           NS_LOG_UNCOND ("dest:");
           isConnect = true;
       }

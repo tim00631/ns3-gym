@@ -145,7 +145,7 @@ public:
   void AddDataBytes (uint64_t bytes);
   uint64_t GetDataBytes (void);
 
-  std::vector<std::pair<Ipv4Address, uint32_t> > GetTop3QueuePktStatus (uint32_t nodeId);
+  std::vector<std::pair<Ipv4Address, uint32_t> > GetQueuePktStatus (uint32_t nodeId);
   uint32_t GetQueuingBytes (uint32_t nodeId);
 
   void SetRLAction (uint32_t slotNum);

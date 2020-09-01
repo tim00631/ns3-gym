@@ -734,7 +734,7 @@ TdmaController::ShiftCtrlSlot (void)
 }
 
 std::vector<std::pair<Ipv4Address, uint32_t>>
-TdmaController::GetTop3QueuePktStatus (uint32_t nodeId)
+TdmaController::GetQueuePktStatus (uint32_t nodeId)
 {
   std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(nodeId);
 

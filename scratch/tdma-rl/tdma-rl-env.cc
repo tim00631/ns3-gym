@@ -23,15 +23,7 @@ TdmaGymEnv::TdmaGymEnv ()
   m_stepInterval1 = MicroSeconds(500);
   m_stepInterval2 = MicroSeconds(1000*32 + 500);
   m_repeatChoose = 0;
-/*
-  for (uint32_t i=0;i<NodeList::GetNNodes();i++)
-  {
-	Ptr<Node> nodeId = NodeList::GetNode(i);
-	Ptr<Ipv4> ipv4 = nodeId->GetObject<Ipv4>();
-        Ipv4Address addr = ipv4->GetAddress(1,0).GetLocal();
-	m_ip2id.insert(std::pair<Ipv4Address,uint32_t>(addr,i));
-  }
-*/
+
   Simulator::Schedule (NanoSeconds(10.0), &TdmaGymEnv::ScheduleNextStateRead, this);
 
 }
@@ -43,15 +35,7 @@ TdmaGymEnv::TdmaGymEnv (Time stepInterval1, Time stepInterval2)
   m_stepInterval1 = stepInterval1;
   m_stepInterval2 = stepInterval2;
   m_repeatChoose = 0;
-/*
-  for (uint32_t i=0;i<NodeList::GetNNodes();i++)
-  {
-	Ptr<Node> nodeId = NodeList::GetNode(i);
-	Ptr<Ipv4> ipv4 = nodeId->GetObject<Ipv4>();
-        Ipv4Address addr = ipv4->GetAddress(1,0).GetLocal();
-	m_ip2id.insert(std::pair<Ipv4Address,uint32_t>(addr,i));
-  }
-*/
+
   Simulator::Schedule (NanoSeconds(10.0), &TdmaGymEnv::ScheduleNextStateRead, this);
 
 }
@@ -214,18 +198,20 @@ TdmaGymEnv::GetObservation()
 
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries() ;
 
-  std::vector<std::pair<Ipv4Address, uint32_t>> top3queuePktStatus = m_tdmaDevice->GetTdmaController()->GetTop3QueuePktStatus(m_slotNum);
-
+  std::vector<std::pair<Ipv4Address, uint32_t>> queuePktStatus = m_tdmaDevice->GetTdmaController()->GetQueuePktStatus(m_slotNum);
+  std::vector<std::pair<Ipv4Address, uint32_t>> twoHopsPktStatus;
+    
   uint32_t queuingBytes = m_tdmaDevice->GetTdmaController()->GetQueuingBytes(m_slotNum);
   
+  
 
-  for (uint32_t i=0;i<top3queuePktStatus.size();i++)
+  for (uint32_t i=0;i<queuePktStatus.size();i++)
   {
 	for(uint32_t j=0;j<tdmaRoutingTable.size();j++)
 	{
-		if (tdmaRoutingTable[j].destAddr == top3queuePktStatus[i].first)
+		if (tdmaRoutingTable[j].destAddr == queuePktStatus[i].first && tdmaRoutingTable[j].distance >= 2)
 		{
-			top3queuePktStatus[i].first = tdmaRoutingTable[j].nextAddr;
+            twoHopsPktStatus.push_back(std::pair<Ipv4Address,uint32_t> (tdmaRoutingTable[j].nextAddr,queuePktStatus[i].second));
 			break;
 		}
 	}
@@ -243,23 +229,39 @@ TdmaGymEnv::GetObservation()
 	}
   }
 
-  for (uint32_t i=0;i<top3queuePktStatus.size();i++)
+  uint32_t counter = 1;
+  bool isInList = false;
+  std::vector<uint32_t> top3PktSize;
+                                       
+  for (uint32_t i=0;i<twoHopsPktStatus.size();i++)
   {
 	//std::map<Ipv4Address,uint32_t>::iterator it = m_ip2id.find(top3queuePktStatus[i].first);
-    uint32_t topN_nodeId = top3queuePktStatus[i].first.CombineMask(Ipv4Mask(255)).Get()-1;
-
+    uint32_t topN_nodeId = twoHopsPktStatus[i].first.CombineMask(Ipv4Mask(255)).Get()-1;
+    isInList = false;
 
 	for (uint32_t j=0;j<nodeUsedList.size();j++)
 	{
+        /*
 		if (nodeUsedList[j].first == 0)
 		{
 			nodeUsedList_top3Pkt[j] = 0;
 		}
-		else if(topN_nodeId == nodeUsedList[j].second && nodeUsedList[j].first != 0) // node is top 3 
+        */
+		if(topN_nodeId == nodeUsedList[j].second && nodeUsedList[j].first != 0) // node is top 3 
 		{
-			nodeUsedList_top3Pkt[j] = i+1;
+            isInList = true;
+			nodeUsedList_top3Pkt[j] = counter;
+            
 		}
 	}
+    if (isInList){
+        counter++;
+        top3PktSize.push_back(twoHopsPktStatus[i].second);
+    }
+      
+    if (counter >= 4){
+        break;
+    }
 
 
   }
@@ -281,9 +283,9 @@ TdmaGymEnv::GetObservation()
   //pktBytes_box->AddValue (100);
   pktBytes_box->AddValue (queuingBytes);
 
-  for (uint32_t i=0;i<top3queuePktStatus.size();i++)
+  for (uint32_t i=0;i<top3PktSize.size();i++)
   {
-	pktBytes_box->AddValue (top3queuePktStatus[i].second);
+	pktBytes_box->AddValue (top3PktSize[i]);
   }
 
   Ptr<OpenGymTupleContainer> data = CreateObject<OpenGymTupleContainer> ();
