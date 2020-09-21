@@ -199,8 +199,8 @@ private:
   std::map<uint32_t,Ptr<TdmaNetDevice> > m_tdmaDeviceList;  // (NodeId,device)
   std::map<Ptr<TdmaMac>,uint32_t> m_mac2Id; // use TdmaMac to get nodeId
   std::map<uint32_t,Ptr<TdmaMac>> m_id2mac; // use nodeId to get TdmaMac
-  std::pair<uint32_t,uint32_t> m_tdmaUsedListCur[16][32]; // store each node's Data slot Used list (current frame) [nodeId][slotNum].(priority,nodeId)
-  std::pair<uint32_t,uint32_t> m_tdmaUsedListPre[16][32]; // store each node's Data slot Used list (previous frame) [nodeId][slotNum].(priority,nodeId)
+  std::pair<uint32_t,uint32_t> m_tdmaUsedListCur[16][32]; // store each node's Data slot Used list (current frame) [nodeId][slotNum].(hops,nodeId)
+  std::pair<uint32_t,uint32_t> m_tdmaUsedListPre[16][32]; // store each node's Data slot Used list (previous frame) [nodeId][slotNum].(hops,nodeId)
   int32_t m_tdmaEntrySlotNum[16];
 
   uint64_t m_tdmaDataBytes;

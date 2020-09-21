@@ -141,11 +141,7 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
   std::string s = std::string((char*)buffer);
   delete buffer;
 
-  //std::cout<<"PacketUid: "<< packet->GetUid() <<", PacketHeader:  ";
-  //std::cout<<packet->ToString()<<std::endl;
-  //NS_LOG_UNCOND("Insertpkt:size: " << packet->GetSize ()
-  //                                          << " uid: " << packet->GetUid ());
-  
+
     
   std::size_t idx_olsr = packet->ToString().find("olsr");
   std::size_t idx_arp = packet->ToString().find("Arp");
@@ -170,9 +166,6 @@ TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
     }
   	isCtrl = false;
     
-    //NS_LOG_UNCOND ("Inserted packet of size: " << packet->GetSize ()
-    //                                        << " uid: " << packet->GetUid ());
-    //NS_LOG_UNCOND (packet->ToString());
   }
   
   
@@ -309,11 +302,11 @@ TdmaMacQueue::Remove (Ptr<const Packet> packet, bool isCtrl)
   return false;
 }
 
+// Get queued information for change slot usage table to weight vector
 std::vector<std::pair<Ipv4Address,uint32_t>>
 TdmaMacQueue::GetPktStatus ()
 {
   std::vector<std::pair<Ipv4Address,uint32_t>> queuePktStatus;
-  //std::vector<std::pair<Ipv4Address,uint32_t>> queuePktStatus{std::pair<Ipv4Address,uint32_t>(Ipv4Address("10.1.1.1"),500)};
 
   LlcSnapHeader h;
   Ipv4Header iph;
@@ -323,6 +316,7 @@ TdmaMacQueue::GetPktStatus ()
     std::size_t idx_ipv4 = it->packet->ToString().find("Ipv4Header");
     if (idx_ipv4 != string::npos)
     {
+    // remove llc, ipv4 header
 	Ptr<Packet> copy = it->packet->Copy();
   	copy->RemoveHeader(h);
  	copy->RemoveHeader (iph);
@@ -333,6 +327,7 @@ TdmaMacQueue::GetPktStatus ()
     }
     else
     {
+        // Calculate the amount of packet sizes based on destination ip
         for (uint32_t i=0;i<queuePktStatus.size();i++)
         {
             if (queuePktStatus[i].first == iph.GetDestination()) 
@@ -351,18 +346,15 @@ TdmaMacQueue::GetPktStatus ()
 
   std::sort(queuePktStatus.begin(),queuePktStatus.end(),[](const std::pair<Ipv4Address,uint32_t>& l, const std::pair<Ipv4Address,uint32_t>& r) 
 	    {
-		//return l.second != r.second ? l.second < r.second : l.first < r.first;
           return l.second >= r.second;
 	    });
  
-  //uint32_t topN = queuePktStatus.size() > 3 ? 3 : queuePktStatus.size(); 
-  //std::vector<std::pair<Ipv4Address,uint32_t>> top3queuePktStatus(queuePktStatus.begin(),queuePktStatus.begin()+topN);
 
-
-  //return top3queuePktStatus;
   return queuePktStatus;
 }
 
+    
+// Get total queued bytes
 uint32_t
 TdmaMacQueue::GetQueuingBytes (void)
 {

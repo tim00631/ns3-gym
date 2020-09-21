@@ -143,7 +143,7 @@ int main (int argc, char **argv)
   uint32_t slotTime = 1000 * 8 / 8000 * 1000000; // us
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
-  uint32_t pktNum = 5;
+  uint32_t pktNum = 15;
   double pktInterval = 0.04;
   uint32_t simSeed = 0;
   //srand(30000);
@@ -208,33 +208,28 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
 {
   
   Ptr<Node> node = NodeList::GetNode (nodeId);
+  // Get routing table of Node(nodeId)
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries();
+    
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable_twohops;
-  //NS_LOG_UNCOND("Node:" << nodeId << ".want to send to "<< m_socketMap[nodeId].first);
   NS_LOG_UNCOND("Routing table: Node:" << nodeId);
     
   bool isConnect = false; 
-   
+  
+  // if the destination node is still in routing table,
+  // it would not change the destination
   for(auto rule:tdmaRoutingTable){
       if (m_lastSocket[nodeId].first == rule.destAddr){ // && remainTransmit != 7000) {
           NS_LOG_UNCOND ("dest:");
           isConnect = true;
       }
       NS_LOG_UNCOND(rule.destAddr << " : dis=" <<rule.distance);
+      // When choosing the destination, the node more than two-hops would be select first
       if (rule.distance > 1 ) tdmaRoutingTable_twohops.push_back(rule);
   }
-  /*
-  bool inRoutingTable = false;
-  for(auto rule:tdmaRoutingTable){
-      if (rule.destAddr == m_socketMap[nodeId].first){
-          inRoutingTable = true;
-          break;
-      }
-  }
-  */
+
   
-  
-    
+  // Random select destination from the nodes more than two-hops
   uint32_t rngVal = 0;  
   if (!isConnect && tdmaRoutingTable_twohops.size() != 0) {
       Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
@@ -256,7 +251,8 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
           }
       }
   }
-    
+  // if there are only one-hop neighbor in routing table,
+  // Random select destination from these nodes
   else if (!isConnect && tdmaRoutingTable.size() != 0) {
       Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
       rng->SetAttribute ("Min",DoubleValue (0));
@@ -272,33 +268,7 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
   }
   
 
-  //std::random_shuffle (tdmaRoutingTable.begin(),tdmaRoutingTable.end());
-  
-  /*
-  if (remainTransmit > 0)
-  {
-	std::ostringstream msg; msg << "Hello World!" << '\0';
-	Ptr<Packet> packet;
-    if (inRoutingTable){
-        for (uint32_t i=0;i<pktNum;i++)
-        {
-            packet = Create<Packet> ((uint8_t*) msg.str().c_str(), pktSize);
-            m_socketMap[nodeId].second->Send (packet);
-        }
-        //NS_LOG_UNCOND("SendPacket:"<<packet->GetUid());
-    }
-    //else NS_LOG_UNCOND("Not in routing table");
-	
-    Simulator::Schedule (pktInterval, &TdmaExample::GenerateTraffic, this,
-               	           nodeId, pktSize,remainTransmit - 1, pktInterval, pktNum);
 
-  }
-  else if (remainTransmit <= 0)
-  {
-	m_socketMap[nodeId].second->Close();
-        
-  }
-  */
   
   Ptr<Socket> socket;
   
@@ -308,7 +278,6 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
     if (!isConnect) {
         
         std::map<Ipv4Address,Ptr<Socket>>::iterator it = m_socketMap[nodeId].find(tdmaRoutingTable[rngVal].destAddr);
-        //std::map<Ipv4Address,Ptr<Socket>>::iterator it = m_socketMap[nodeId].find(tdmaRoutingTable[0].destAddr);
         socket = it->second;
         m_lastSocket[nodeId] = std::make_pair(tdmaRoutingTable[rngVal].destAddr,it->second);
     } 
@@ -457,7 +426,7 @@ TdmaExample::SetupMobility ()
 {
   MobilityHelper mobility;
 
- // Random initial position
+  // Set initial position (random)
   /*
   ObjectFactory pos;
   pos.SetTypeId ("ns3::RandomRectanglePositionAllocator");
@@ -467,7 +436,8 @@ TdmaExample::SetupMobility ()
   Ptr<PositionAllocator> positionAlloc = pos.Create ()->GetObject<PositionAllocator> ();  
   mobility.SetPositionAllocator (positionAlloc);
   */
-  
+    
+  // Set initial position (grid)
   mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
                                  "MinX", DoubleValue (500.0),
                                  "MinY", DoubleValue (500.0),
@@ -548,23 +518,7 @@ TdmaExample::InstallApplications (bool selfGenerate)
       
 	for (uint32_t i=0;i<m_nWifis;i++)
 	{
-    	/*
-        Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable> ();
-        rng->SetAttribute ("Min",DoubleValue (0));
-        rng->SetAttribute ("Max",DoubleValue (m_nWifis-1));
 
-        uint32_t rngVal = rng->GetValue();
-        while(i == rngVal) rngVal = rng->GetValue();
-        
-        NS_LOG_UNCOND("Node:"<<i<<", would send to Node:"<<rngVal);
-        
-        TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  		Ptr<Socket> source = Socket::CreateSocket (nodes.Get (i), tid);
-		InetSocketAddress remote = InetSocketAddress (interfaces.GetAddress (rngVal, 0), port);
-		source->Connect (remote);
-        
-        m_socketMap.push_back(std::make_pair(interfaces.GetAddress (rngVal, 0),source));
-        */
         m_lastSocket.push_back(std::make_pair(Ipv4Address("255.255.255.255"),Ptr<Socket>()));
         std::map<Ipv4Address,Ptr<Socket>> ip2socket;
         
@@ -586,7 +540,6 @@ TdmaExample::InstallApplications (bool selfGenerate)
         
 		
 
-        //Ptr<Node> node_source = NodeList::GetNode (i);
 		Simulator::Schedule (Seconds (m_dataStart), &TdmaExample::GenerateTraffic, this,
 					i, 512, (m_totalTime-m_dataStart)/m_pktInterval, Seconds(m_pktInterval), m_pktNum);
 	}

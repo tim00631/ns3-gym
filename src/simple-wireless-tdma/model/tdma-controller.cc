@@ -495,7 +495,7 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
     
   }
 
-  
+  // Random select action
   /*
   // Search unused slot from UsedList
   std::vector<uint32_t> candidateList_unused;
@@ -548,7 +548,9 @@ TdmaController::SendUsed (Ptr<TdmaNetDevice> device)
   // Use the unused slot in unusedList_select
   for (uint32_t i=0;i<32;i++)
   {
-	//if ( counter < num && unusedList_select.size()!=0 && i == unusedList_select[counter] ) 
+    // Get action from random select
+	//if ( counter < num && unusedList_select.size()!=0 && i == unusedList_select[counter] )
+    // Get action from RL action vector
 	if ( counter < m_tdmaRLAction.size() && i == m_tdmaRLAction[counter] ) 
 	{
     if (m_tdmaUsedListCur[device->GetNode()->GetId()][i].first != 0)

@@ -193,18 +193,19 @@ TdmaGymEnv::GetObservation()
   Ptr<Node> node = NodeList::GetNode (m_slotNum);
   Ptr<NetDevice> dev = node-> GetDevice(0);
   Ptr<TdmaNetDevice> m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
-
+  // Get slot usage table
   std::vector<std::pair<uint32_t,uint32_t> > nodeUsedList = m_tdmaDevice->GetTdmaController()->GetNodeUsedList(m_slotNum);
-
+  // Get routing table
   std::vector<ns3::olsr::RoutingTableEntry> tdmaRoutingTable = node->GetObject<ns3::olsr::RoutingProtocol> ()->GetRoutingTableEntries() ;
-
+  // Get queued information
   std::vector<std::pair<Ipv4Address, uint32_t>> queuePktStatus = m_tdmaDevice->GetTdmaController()->GetQueuePktStatus(m_slotNum);
   std::vector<std::pair<Ipv4Address, uint32_t>> twoHopsPktStatus;
-    
+  // Get total queued bytes
   uint32_t queuingBytes = m_tdmaDevice->GetTdmaController()->GetQueuingBytes(m_slotNum);
   
   
-
+  // Calculate weight vector
+  // Filter one-hop packets
   for (uint32_t i=0;i<queuePktStatus.size();i++)
   {
 	for(uint32_t j=0;j<tdmaRoutingTable.size();j++)
@@ -218,7 +219,6 @@ TdmaGymEnv::GetObservation()
   }
 
   int32_t nodeUsedList_top3Pkt[32];
-  //memset(nodeUsedList_top3Pkt,,32*sizeof(int32_t));
   std::fill_n(nodeUsedList_top3Pkt,32,4);
 
   for (uint32_t i=0;i<32;i++)
@@ -235,18 +235,13 @@ TdmaGymEnv::GetObservation()
                                        
   for (uint32_t i=0;i<twoHopsPktStatus.size();i++)
   {
-	//std::map<Ipv4Address,uint32_t>::iterator it = m_ip2id.find(top3queuePktStatus[i].first);
+    // change ip->nodeId
     uint32_t topN_nodeId = twoHopsPktStatus[i].first.CombineMask(Ipv4Mask(255)).Get()-1;
     isInList = false;
 
 	for (uint32_t j=0;j<nodeUsedList.size();j++)
 	{
-        /*
-		if (nodeUsedList[j].first == 0)
-		{
-			nodeUsedList_top3Pkt[j] = 0;
-		}
-        */
+        // replace NodeId with priority
 		if(topN_nodeId == nodeUsedList[j].second && nodeUsedList[j].first != 0) // node is top 3 
 		{
             isInList = true;
@@ -267,6 +262,7 @@ TdmaGymEnv::GetObservation()
   }
 
   
+  // Store weight vector in box, which is used to send message to python
   uint32_t dataSlotNum = 32;
   std::vector<uint32_t> shape = {dataSlotNum,};
   Ptr<OpenGymBoxContainer<int32_t> > slotUsedTable_box = CreateObject<OpenGymBoxContainer<int32_t> >(shape);
@@ -276,13 +272,14 @@ TdmaGymEnv::GetObservation()
 	slotUsedTable_box->AddValue (nodeUsedList_top3Pkt[i]);
   }
 
-
+  x
   std::vector<uint32_t> shape2 = {3+1,};
   Ptr<OpenGymBoxContainer<uint32_t>> pktBytes_box = CreateObject<OpenGymBoxContainer<uint32_t> >(shape2);
 
-  //pktBytes_box->AddValue (100);
+  // Store total packet bytes
   pktBytes_box->AddValue (queuingBytes);
-
+    
+  // Store Top K packetbytes in bo
   for (uint32_t i=0;i<top3PktSize.size();i++)
   {
 	pktBytes_box->AddValue (top3PktSize[i]);
@@ -318,6 +315,7 @@ TdmaGymEnv::GetReward()
 
 /*
 Define extra info. Optional
+Send r_i, throughput, delay to python
 */
  
 std::string

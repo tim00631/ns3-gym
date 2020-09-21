@@ -3,7 +3,7 @@ import numpy as np
 from tensorflow.python.keras import layers
 from tensorflow.keras.optimizers import RMSprop
 
-
+# for prioritized experience replay
 class SumTree(object):
     """
     This SumTree code is a modified version and the original code is from:
