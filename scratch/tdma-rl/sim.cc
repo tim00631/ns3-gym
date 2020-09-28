@@ -128,23 +128,23 @@ int main (int argc, char **argv)
   Packet::EnablePrinting ();
 
   TdmaExample test;
-  uint32_t nWifis = 16;
+  uint32_t nWifis = 16; // *
   uint32_t Sink = 3;
-  double totalTime = 300.0;
+  double totalTime = 300.0; // *
   std::string rate ("8kbps");
   std::string appl = "all";
   uint32_t settlingTime = 6;
-  double dataStart = 10.0;
-  double txpDistance = 1000.0;
+  double dataStart = 10.0; // *
+  double txpDistance = 1000.0; // *
   bool selfGenerate = true;
 
   // tdma parameters
   // slotTime is at least the number of bytes in a packet * 8 bits/byte / bit rate * 1e6 microseconds
-  uint32_t slotTime = 1000 * 8 / 8000 * 1000000; // us
+  uint32_t slotTime = 1000 * 8 / 8000 * 1000000; // us 
   uint32_t interFrameGap = 0;
   uint32_t guardTime = 0;
-  uint32_t pktNum = 15;
-  double pktInterval = 0.04;
+  uint32_t pktNum = 15; // *
+  double pktInterval = 0.04; // *
   uint32_t simSeed = 0;
   //srand(30000);
 
@@ -168,7 +168,7 @@ int main (int argc, char **argv)
   
   RngSeedManager::SetSeed (1);
   //RngSeedManager::SetRun (2680958325);
-  RngSeedManager::SetRun (2680958311);
+  RngSeedManager::SetRun (2680958311); // *
   //RngSeedManager::SetRun (simSeed);
 
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", StringValue ("1000")); // bytes!

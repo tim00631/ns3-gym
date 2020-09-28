@@ -272,14 +272,14 @@ TdmaGymEnv::GetObservation()
 	slotUsedTable_box->AddValue (nodeUsedList_top3Pkt[i]);
   }
 
-  x
+  
   std::vector<uint32_t> shape2 = {3+1,};
   Ptr<OpenGymBoxContainer<uint32_t>> pktBytes_box = CreateObject<OpenGymBoxContainer<uint32_t> >(shape2);
 
   // Store total packet bytes
   pktBytes_box->AddValue (queuingBytes);
     
-  // Store Top K packetbytes in bo
+  // Store Top K packetbytes in box
   for (uint32_t i=0;i<top3PktSize.size();i++)
   {
 	pktBytes_box->AddValue (top3PktSize[i]);
