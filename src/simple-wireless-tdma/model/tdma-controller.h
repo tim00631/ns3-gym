@@ -166,7 +166,11 @@ private:
   void UpdateFrameLength (void);
   void ScheduleTdmaSession (const uint32_t slotNum);
   void ShiftCtrlSlot(void);
-  void ShiftCtrlSlotMap(void);
+  // void ShiftCtrlSlotMap(void);
+  void ShiftCtrlSlotMap_shift_based(void);
+  void ShiftCtrlSlotMap_reverse_based(void);
+  void ShiftCtrlSlotMap_coprime_based(void);
+  void ShiftCtrlSlotMap_block_based(void);
   uint32_t GetCtrlNode (uint32_t slotNum);
   uint32_t GetCtrlSlot (uint32_t nodeId);
   void RotateUsedList (void);

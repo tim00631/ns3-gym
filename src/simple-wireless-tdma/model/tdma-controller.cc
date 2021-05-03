@@ -197,7 +197,7 @@ TdmaController::StartTdmaSessions (void)
   NS_LOG_UNCOND("--------------------------Frame Start : "<< Simulator::Now().GetNanoSeconds() <<"ns ---------------------------");
   ScheduleTdmaSession (0);
   
-  //ShiftCtrlSlot();
+  ShiftCtrlSlot();
 }
 
 // Rotate the current frame's UsedList to previous frame's UsedList
@@ -674,7 +674,33 @@ TdmaController::GetCtrlSlot (uint32_t nodeId)
 }
 
 void
-TdmaController::ShiftCtrlSlotMap()
+TdmaController::ShiftCtrlSlotMap_shift_based() {
+  uint32_t last_index = 15;
+  uint32_t temp = m_tdmaCtrlSlotMap[last_index];
+  memmove(&m_tdmaCtrlSlotMap[2], &m_tdmaCtrlSlotMap[1], sizeof(uint32_t) * (last_index));
+  m_tdmaCtrlSlotMap[1] = temp;
+}
+
+void
+TdmaController::ShiftCtrlSlotMap_reverse_based() {
+  uint32_t last_index = 15;
+  uint32_t mid = (last_index + 1) / 2;
+  std::reverse(m_tdmaCtrlSlotMap+1, m_tdmaCtrlSlotMap + 16);
+  uint32_t temp = m_tdmaCtrlSlotMap[last_index];
+  m_tdmaCtrlSlotMap[last_index] = m_tdmaCtrlSlotMap[mid];
+  m_tdmaCtrlSlotMap[mid] = temp;
+}
+
+void
+TdmaController::ShiftCtrlSlotMap_coprime_based() {
+  uint32_t co_prime = 13;
+  for (uint32_t i = 0; i < 16; i++) {
+    m_tdmaCtrlSlotMap[i] = (m_tdmaCtrlSlotMap[i] * co_prime) % 16;
+  }
+}
+
+void
+TdmaController::ShiftCtrlSlotMap_block_based()
 {
   uint32_t small_scope = 3;
   uint32_t large_scope = 7;
@@ -713,9 +739,19 @@ TdmaController::ShiftCtrlSlotMap()
 void
 TdmaController::ShiftCtrlSlot (void)
 {
-  ShiftCtrlSlotMap();
+  // ShiftCtrlSlotMap();
+  // ShiftCtrlSlotMap_shift_based();
+  // ShiftCtrlSlotMap_reverse_based();
+  // ShiftCtrlSlotMap_coprime_based();
+  std::stringstream stream;
+  stream << "CtrlSlotMap:";
+  for (uint32_t i = 0; i<16;i++) {
+    stream << m_tdmaCtrlSlotMap[i] << ",";
+  }
+  std::string s = stream.str();
+  std::cerr << s << std::endl;
 
-  for (uint32_t i=1;i<64;i++)
+  for (uint32_t i=1;i<16;i++)
   {
       std::map<uint32_t, std::vector<Ptr<TdmaMac> > >::iterator it = m_slotPtrs.find (i);
       if(it != m_slotPtrs.end())
