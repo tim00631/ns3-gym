@@ -743,32 +743,27 @@ TdmaController::ShiftCtrlSlot (void)
   // ShiftCtrlSlotMap_shift_based();
   // ShiftCtrlSlotMap_reverse_based();
   // ShiftCtrlSlotMap_coprime_based();
-  std::stringstream stream;
-  stream << "CtrlSlotMap:";
-  for (uint32_t i = 0; i<16;i++) {
-    stream << m_tdmaCtrlSlotMap[i] << ",";
-  }
-  std::string s = stream.str();
-  std::cerr << s << std::endl;
+	std::stringstream stream;
+  	stream << "CtrlSlotMap:";
+  	for (uint32_t i = 0; i<16;i++) {
+		stream << m_tdmaCtrlSlotMap[i] << ",";
+  	}
+  	std::string s = stream.str();
+  	std::cerr << s << std::endl;
 
-  for (uint32_t i=1;i<16;i++)
-  {
-      std::map<uint32_t, std::vector<Ptr<TdmaMac> > >::iterator it = m_slotPtrs.find (i);
-      if(it != m_slotPtrs.end())
-      {
-          it->second.clear();
+  	for (uint32_t i=1;i<16;i++) {
+      	std::map<uint32_t, std::vector<Ptr<TdmaMac> > >::iterator it = m_slotPtrs.find (i);
+      	if(it != m_slotPtrs.end()) {
+          	it->second.clear();
 
-          std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(GetCtrlNode(i));
-          it->second.push_back(it_mac->second);
-      }
-      else
-      {
-          std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(GetCtrlNode(i));
-
-   	  m_slotPtrs.insert (std::make_pair (i,std::vector<Ptr<TdmaMac> >{it_mac->second})); 
-
-      }
-  } 
+          	std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(GetCtrlNode(i));
+          	it->second.push_back(it_mac->second);
+      	}
+      	else {
+        	std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(GetCtrlNode(i));
+			m_slotPtrs.insert (std::make_pair (i,std::vector<Ptr<TdmaMac> >{it_mac->second})); 
+      	}
+  	}
 }
 
 std::vector<std::pair<Ipv4Address, uint32_t>>
@@ -781,7 +776,7 @@ TdmaController::GetQueuePktStatus (uint32_t nodeId)
 }
 
 uint32_t
-TdmaController::GetQueuingBytes (uint32_t nodeId)
+TdmaController::GetQueuingBytes(uint32_t nodeId)
 {
   std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(nodeId);
 
@@ -790,20 +785,19 @@ TdmaController::GetQueuingBytes (uint32_t nodeId)
 }
 
 void 
-TdmaController::AddDataBytes (uint64_t bytes)
+TdmaController::AddDataBytes(uint64_t bytes)
 {
   m_tdmaDataBytes+=bytes;
 }
 
 uint64_t
-TdmaController::GetDataBytes (void)
+TdmaController::GetDataBytes(void)
 {
   return m_tdmaDataBytes;
 }
 
-
 std::vector<std::pair<uint32_t,uint32_t>>
-TdmaController::GetNodeUsedList (uint32_t nodeId)
+TdmaController::GetNodeUsedList(uint32_t nodeId)
 {
   std::vector<std::pair<uint32_t,uint32_t>> nodeUsedList;
   for(uint32_t i=0;i<32;i++)
@@ -830,6 +824,28 @@ void
 TdmaController::ResetRLReward(uint32_t nodeId)
 {
   memset(m_rlReward+nodeId,0,3*sizeof(int32_t));
+}
+
+uint32_t 
+TdmaController::GetTotalEnqueueDrop()
+{
+	uint32_t total_enqueue_drop = 0;
+	for (uint32_t nodeId = 0; nodeId < 16; nodeId++) {
+		std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(nodeId);
+		total_enqueue_drop += it_mac->second->GetQueueEnqueueDrop();
+	}
+	return total_enqueue_drop;
+}
+
+uint32_t 
+TdmaController::GetTotalCleanupDrop()
+{
+	uint32_t total_cleanup_drop = 0;
+	for (uint32_t nodeId = 0; nodeId < 16; nodeId++) {
+		std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(nodeId);
+		total_cleanup_drop += it_mac->second->GetQueueCleanupDrop();
+	}
+	return total_cleanup_drop;
 }
 
 } // namespace ns3

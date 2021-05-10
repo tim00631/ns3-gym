@@ -433,4 +433,16 @@ TdmaCentralMac::GetQueuingBytes (void) const
   return m_queue->GetQueuingBytes();
 }
 
+uint32_t 
+TdmaCentralMac::GetEnqueueDrop (void) const
+{
+  return m_queue->GetEnqueueDrop();
+}
+
+uint32_t 
+TdmaCentralMac::GetCleanupDrop (void) const
+{
+  return m_queue->GetCleanupDrop();
+}
+
 } // namespace ns3

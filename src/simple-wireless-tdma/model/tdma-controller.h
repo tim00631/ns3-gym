@@ -153,6 +153,9 @@ public:
   float* GetRLReward(uint32_t nodeId);
   void ResetRLReward(uint32_t nodeId);
 
+  // Collect drop packet information
+  uint32_t GetTotalEnqueueDrop();
+  uint32_t GetTotalCleanupDrop();
 private:
   static Time GetDefaultSlotTime (void);
   static Time GetDefaultCtrlSlotTime (void);
@@ -175,7 +178,7 @@ private:
   uint32_t GetCtrlSlot (uint32_t nodeId);
   void RotateUsedList (void);
   void ClearTdmaDataSlot(void);
-
+  
   Ptr<SimpleWirelessChannel> GetChannel (void) const;
 
 //  Time m_lastRxStart;

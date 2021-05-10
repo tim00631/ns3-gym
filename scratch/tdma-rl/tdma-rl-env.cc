@@ -321,39 +321,47 @@ Send r_i, throughput, delay to python
 std::string
 TdmaGymEnv::GetExtraInfo()
 {
-  NS_LOG_FUNCTION (this);
-  
-  uint32_t previous_slotNum = m_slotNum == 0 ? 15 : m_slotNum - 1;
-  Ptr<Node> node = NodeList::GetNode (previous_slotNum);
-  Ptr<NetDevice> dev = node-> GetDevice(0);
-  Ptr<TdmaNetDevice> m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
+	NS_LOG_FUNCTION(this);
 
-  float* reward = m_tdmaDevice->GetTdmaController()->GetRLReward(previous_slotNum);
-  int64_t tdmaDataBytes = 0;
-  
-  if (Simulator::Now().GetSeconds () < 6) tdmaDataBytes = 0;
-  else tdmaDataBytes = recvBytes / 16 / (Simulator::Now().GetSeconds () - 10); // Initializing phase will not compute the performance
-  //NS_LOG_UNCOND("Now: "<<Simulator::Now().GetNanoSeconds ());
-  
-  uint64_t avgDelay = 0;
-  if (recvPacket == 0) avgDelay = 0;
-  else avgDelay = totalDelay/recvPacket;
-    
-    
-  std::stringstream stream;
-  stream << std::fixed << std::setprecision(2) << *(reward) << ",";
-  stream << std::fixed << std::setprecision(2) << *(reward+1) << ",";
-  stream << std::fixed << std::setprecision(2) << *(reward+2) << ",";
-  stream << tdmaDataBytes<<",";
-  stream << avgDelay;
-  std::string Info = stream.str();
-  
+	uint32_t previous_slotNum = m_slotNum == 0 ? 15 : m_slotNum - 1;
+	Ptr<Node> node = NodeList::GetNode(previous_slotNum);
+	Ptr<NetDevice> dev = node-> GetDevice(0);
+	Ptr<TdmaNetDevice> m_tdmaDevice = DynamicCast<TdmaNetDevice>(dev);
 
-  m_tdmaDevice->GetTdmaController()->ResetRLReward(previous_slotNum);
-    
-  //std::string Info = std::to_string(m_slotNum);
-  NS_LOG_UNCOND("MyGetExtraInfo: " << Info);
-  return Info;
+	float* reward = m_tdmaDevice->GetTdmaController()->GetRLReward(previous_slotNum);
+	int64_t tdmaDataBytes = 0;
+	uint32_t enqueueDrop = 0;
+	uint32_t cleanupDrop = 0;
+	if (Simulator::Now().GetSeconds () < 10) {
+		tdmaDataBytes = 0;
+		enqueueDrop = 0;
+		cleanupDrop = 0
+	}
+	else {
+		tdmaDataBytes = recvBytes / 16 / (Simulator::Now().GetSeconds () - 10); // Initializing phase will not compute the performance
+		for m_tdmaDevice->GetTdmaController()->Get
+	}
+	//NS_LOG_UNCOND("Now: "<<Simulator::Now().GetNanoSeconds ());
+
+	uint64_t avgDelay = 0;
+	if (recvPacket == 0) avgDelay = 0;
+	else avgDelay = totalDelay/recvPacket;
+		
+		
+	std::stringstream stream;
+	stream << std::fixed << std::setprecision(2) << *(reward) << ",";
+	stream << std::fixed << std::setprecision(2) << *(reward+1) << ",";
+	stream << std::fixed << std::setprecision(2) << *(reward+2) << ",";
+	stream << tdmaDataBytes<<",";
+	stream << avgDelay;
+	std::string Info = stream.str();
+
+
+	m_tdmaDevice->GetTdmaController()->ResetRLReward(previous_slotNum);
+		
+	//std::string Info = std::to_string(m_slotNum);
+	NS_LOG_UNCOND("MyGetExtraInfo: " << Info);
+return Info;
 }
 
 

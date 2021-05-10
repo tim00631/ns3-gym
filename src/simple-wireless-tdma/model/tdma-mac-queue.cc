@@ -78,6 +78,8 @@ TdmaMacQueue::TdmaMacQueue ()
   m_count[0] = 0;
   m_size[1] = 0;
   m_count[1] = 0;
+  m_enqueueDrop = 0;
+  m_cleanupDrop = 0;
 //  LogComponentEnable ("TdmaMacQueue", LOG_LEVEL_DEBUG);
 }
 
@@ -149,6 +151,7 @@ bool TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
     if (s.compare(0,5,"#TDMA") == 0)
     {
         if (m_size[1] == m_maxSize) {
+            m_enqueueDrop++;
             return false;
         }
         isCtrl = true;
@@ -156,6 +159,7 @@ bool TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
     else if (idx_olsr != string::npos || idx_arp != string::npos)
     {
         if (m_size[1] == m_maxSize) {
+            m_enqueueDrop++;
             return false; 
         }
         isCtrl = true;
@@ -164,13 +168,14 @@ bool TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
     {
         if (m_size[0] == m_maxSize) {
             //NS_LOG_UNCOND ("Queue max");
+            m_enqueueDrop++;
             return false;
         }
         isCtrl = false;
     }
     
     
-    m_queue[isCtrl].push_back (Item (packet, hdr, now));
+    m_queue[isCtrl].push_back(Item (packet, hdr, now));
     m_size[isCtrl]++;
     NS_LOG_DEBUG ("Inserted packet of size: " << packet->GetSize() << " uid: " << packet->GetUid());
     return true;
@@ -202,7 +207,7 @@ TdmaMacQueue::Cleanup(bool isCtrl)
         }
     }
     m_size[isCtrl] -= n;
-    
+    m_cleanupDrop += n;
 }
 
 // pop packet from queue front
@@ -366,7 +371,13 @@ TdmaMacQueue::GetQueuingBytes (void)
   return queuingBytes;
 }
 
-uint32_t TdmaMacQueue::GetEnqueueDrop(void){
-    
+uint32_t
+TdmaMacQueue::GetEnqueueDrop(void){
+  return m_enqueueDrop;
+}
+
+uint32_t
+TdmaMacQueue::GetEnqueueDrop(void){
+  return m_cleanupDrop;
 }
 } // namespace ns3
