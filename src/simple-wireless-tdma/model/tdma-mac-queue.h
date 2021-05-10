@@ -110,6 +110,7 @@ public:
   std::vector<std::pair<Ipv4Address,uint32_t>> GetPktStatus (void);
   uint32_t GetQueuingBytes (void);
 
+  // return current Drop pa 
 private:
   struct Item;
 
@@ -137,6 +138,8 @@ private:
   uint32_t m_count[2];
   Ptr<TdmaMac> m_macPtr;
   TdmaMacTxDropCallback m_txDropCallback;
+  uint32_t EnqueueDrop;
+  uint32_t CleanupDrop;
 };
 
 } // namespace ns3

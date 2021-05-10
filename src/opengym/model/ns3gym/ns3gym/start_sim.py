@@ -86,7 +86,7 @@ def start_sim_script(port=5555, simSeed=0, simArgs={}, debug=False):
 	ns3Proc = None
 	if debug:
         
-		errorOutput = open("/tf/log/test/RLerror.log","w")
+		errorOutput = open("/tf/log/RLerror.log","w")
         
 		ns3Proc = subprocess.Popen(wafString, shell=True, stdout=None, stderr=errorOutput)
 	else:
