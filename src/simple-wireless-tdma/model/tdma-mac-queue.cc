@@ -122,92 +122,87 @@ TdmaMacQueue::GetMaxDelay (void) const
   return m_maxDelay;
 }
 
-bool
-TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
+bool TdmaMacQueue::Enqueue (Ptr<const Packet> packet, const WifiMacHeader &hdr)
 {
-  NS_LOG_DEBUG ("Queue Size: " << GetSize (false) <<" Ctrl Queue Size: " << GetSize (true) << " Max Size: " << GetMaxSize ());
-  Cleanup (false);
-  Cleanup (true);
-  Time now = Simulator::Now ();
+    NS_LOG_DEBUG("Queue Size: " << GetSize (false) <<" Ctrl Queue Size: " << GetSize (true) << " Max Size: " << GetMaxSize ());
+    Cleanup(false);
+    Cleanup(true);
+    Time now = Simulator::Now();
 
-  if (packet->GetSize() > 1500) return false;
-
-  // parse packet content to push into diff queue
-  uint8_t *buffer = new uint8_t[packet->GetSize ()];
-  Ptr<Packet> tmp = packet->Copy();
-  LlcSnapHeader h;
-  tmp->RemoveHeader(h);
-  tmp->CopyData(buffer, tmp->GetSize ());
-  std::string s = std::string((char*)buffer);
-  delete buffer;
-
-
-    
-  std::size_t idx_olsr = packet->ToString().find("olsr");
-  std::size_t idx_arp = packet->ToString().find("Arp");
-
-  bool isCtrl = false;
-  if (s.compare(0,5,"#TDMA") == 0 )
-  {
-  	if (m_size[1] == m_maxSize) return false;
-	isCtrl = true;
-  }
-  else if (idx_olsr != string::npos || idx_arp != string::npos)
-  {
-  	if (m_size[1] == m_maxSize) return false; 
-
-	isCtrl = true;
-  }
-  else
-  {
-  	if (m_size[0] == m_maxSize) {
-        //NS_LOG_UNCOND ("Queue max");
+    if (packet->GetSize() > 1500) {
         return false;
     }
-  	isCtrl = false;
-    
-  }
-  
-  
 
-  m_queue[isCtrl].push_back (Item (packet, hdr, now));
-  m_size[isCtrl]++;
-  NS_LOG_DEBUG ("Inserted packet of size: " << packet->GetSize ()
-                                            << " uid: " << packet->GetUid ());
-  return true;
+    // parse packet content to push into diff queue
+    uint8_t *buffer = new uint8_t[packet->GetSize()];
+    Ptr<Packet> tmp = packet->Copy();
+    LlcSnapHeader h;
+    tmp->RemoveHeader(h);
+    tmp->CopyData(buffer, tmp->GetSize());
+    std::string s = std::string((char*)buffer);
+    delete buffer;
+    
+    std::size_t idx_olsr = packet->ToString().find("olsr");
+    std::size_t idx_arp = packet->ToString().find("Arp");
+
+    bool isCtrl = false;
+    if (s.compare(0,5,"#TDMA") == 0)
+    {
+        if (m_size[1] == m_maxSize) {
+            return false;
+        }
+        isCtrl = true;
+    }
+    else if (idx_olsr != string::npos || idx_arp != string::npos)
+    {
+        if (m_size[1] == m_maxSize) {
+            return false; 
+        }
+        isCtrl = true;
+    }
+    else
+    {
+        if (m_size[0] == m_maxSize) {
+            //NS_LOG_UNCOND ("Queue max");
+            return false;
+        }
+        isCtrl = false;
+    }
+    
+    
+    m_queue[isCtrl].push_back (Item (packet, hdr, now));
+    m_size[isCtrl]++;
+    NS_LOG_DEBUG ("Inserted packet of size: " << packet->GetSize() << " uid: " << packet->GetUid());
+    return true;
 }
 
 // check queue packet is out-of-date or not
 void
-TdmaMacQueue::Cleanup (bool isCtrl)
+TdmaMacQueue::Cleanup(bool isCtrl)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-  if (m_queue[isCtrl].empty ())
-    {
-      return;
+    NS_LOG_FUNCTION_NOARGS();
+    if (m_queue[isCtrl].empty()) {
+        return;
     }
-  Time now = Simulator::Now ();
-  uint32_t n = 0;
-  for (PacketQueueI i = m_queue[isCtrl].begin (); i != m_queue[isCtrl].end (); )
-    {
-      if (i->tstamp + m_maxDelay > now)
-        {
-          i++;
+    Time now = Simulator::Now();
+    uint32_t n = 0;
+    for (PacketQueueI i = m_queue[isCtrl].begin(); i != m_queue[isCtrl].end();) {
+        if (i->tstamp + m_maxDelay > now) {
+            i++;
         }
-      else
-        {
-          m_count[isCtrl]++;
-          NS_LOG_DEBUG (Simulator::Now ().GetSeconds () << "s Dropping this packet as its exceeded queue time, pid: " << i->packet->GetUid ()
-                                                        << " macPtr: " << m_macPtr
-                                                        << " queueSize: " << m_queue[isCtrl].size ()
-                                                        << " count:" << m_count[isCtrl]);
-          m_txDropCallback (i->packet);
-          
-	  i = m_queue[isCtrl].erase (i);
-          n++;
+        else {
+            m_count[isCtrl]++;
+            NS_LOG_DEBUG(Simulator::Now ().GetSeconds () << "s Dropping this packet as its exceeded queue time, pid: " << i->packet->GetUid()
+                                                            << " macPtr: " << m_macPtr
+                                                            << " queueSize: " << m_queue[isCtrl].size ()
+                                                            << " count:" << m_count[isCtrl]);
+            m_txDropCallback(i->packet);
+            i = m_queue[isCtrl].erase(i);
+            n++;
         }
     }
-  m_size[isCtrl] -= n;
+    m_size[isCtrl] -= n;
+    
 }
 
 // pop packet from queue front
@@ -371,4 +366,7 @@ TdmaMacQueue::GetQueuingBytes (void)
   return queuingBytes;
 }
 
+uint32_t TdmaMacQueue::GetEnqueueDrop(void){
+    
+}
 } // namespace ns3

@@ -332,7 +332,7 @@ TdmaGymEnv::GetExtraInfo()
   int64_t tdmaDataBytes = 0;
   
   if (Simulator::Now().GetSeconds () < 6) tdmaDataBytes = 0;
-  else tdmaDataBytes = recvBytes / 16 / (Simulator::Now().GetSeconds () - 5);
+  else tdmaDataBytes = recvBytes / 16 / (Simulator::Now().GetSeconds () - 10); // Initializing phase will not compute the performance
   //NS_LOG_UNCOND("Now: "<<Simulator::Now().GetNanoSeconds ());
   
   uint64_t avgDelay = 0;
