@@ -335,11 +335,12 @@ TdmaGymEnv::GetExtraInfo()
 	if (Simulator::Now().GetSeconds () < 10) {
 		tdmaDataBytes = 0;
 		enqueueDrop = 0;
-		cleanupDrop = 0
+		cleanupDrop = 0;
 	}
 	else {
 		tdmaDataBytes = recvBytes / 16 / (Simulator::Now().GetSeconds () - 10); // Initializing phase will not compute the performance
-		for m_tdmaDevice->GetTdmaController()->Get
+		enqueueDrop = m_tdmaDevice->GetTdmaController()->GetTotalEnqueueDrop() / 16 / (Simulator::Now().GetSeconds () - 10);
+    cleanupDrop = m_tdmaDevice->GetTdmaController()->GetTotalCleanupDrop() / 16 / (Simulator::Now().GetSeconds () - 10);
 	}
 	//NS_LOG_UNCOND("Now: "<<Simulator::Now().GetNanoSeconds ());
 
@@ -352,8 +353,10 @@ TdmaGymEnv::GetExtraInfo()
 	stream << std::fixed << std::setprecision(2) << *(reward) << ",";
 	stream << std::fixed << std::setprecision(2) << *(reward+1) << ",";
 	stream << std::fixed << std::setprecision(2) << *(reward+2) << ",";
-	stream << tdmaDataBytes<<",";
-	stream << avgDelay;
+	stream << tdmaDataBytes << ",";
+	stream << avgDelay << ",";
+  stream << enqueueDrop << ",";
+  stream << cleanupDrop;
 	std::string Info = stream.str();
 
 

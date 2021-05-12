@@ -377,7 +377,7 @@ TdmaMacQueue::GetEnqueueDrop(void){
 }
 
 uint32_t
-TdmaMacQueue::GetEnqueueDrop(void){
+TdmaMacQueue::GetCleanupDrop(void){
   return m_cleanupDrop;
 }
 } // namespace ns3

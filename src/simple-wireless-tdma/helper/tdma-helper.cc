@@ -181,7 +181,7 @@ TdmaHelper::SetDefaultSlots (void)
     {
       m_slotAllotmentArray[i][continuousSlots * m_numRows + i + 1] = 1;
     }
-  PrintSlotAllotmentArray ();
+  // PrintSlotAllotmentArray ();
 }
 
 void
@@ -197,7 +197,7 @@ TdmaHelper::SetSlots (void)
           m_slotAllotmentArray[i][j] = slotArrays[i][j];
         }
     }
-  PrintSlotAllotmentArray();
+  // PrintSlotAllotmentArray();
 }
 
 void

@@ -193,7 +193,7 @@ TdmaController::StartTdmaSessions (void)
   ClearTdmaDataSlot();
   
   //printf("Time: %luns, Overhead: %f, Delay: %fns, Throughput: %f B/s, Delivery Ratio: %f\n",Simulator::Now().GetNanoSeconds(),(double)m_tdmaNonDataBytes/m_tdmaTotalBytes,(double)m_tdmaDelay/m_pktCount, (double)(m_tdmaTotalBytes-m_tdmaNonDataBytes)/(Simulator::Now().GetSeconds()),(double)m_tdmaDataSuccessfulBytes/m_tdmaDataBytes);
-  std::cout<<"--------------------------Frame Start : "<< Simulator::Now().GetNanoSeconds() <<"ns ---------------------------"<<std::endl;
+  std::cerr<<"--------------------------Frame Start : "<< Simulator::Now().GetNanoSeconds() <<"ns ---------------------------"<<std::endl;
   NS_LOG_UNCOND("--------------------------Frame Start : "<< Simulator::Now().GetNanoSeconds() <<"ns ---------------------------");
   ScheduleTdmaSession (0);
   
@@ -832,7 +832,7 @@ TdmaController::GetTotalEnqueueDrop()
 	uint32_t total_enqueue_drop = 0;
 	for (uint32_t nodeId = 0; nodeId < 16; nodeId++) {
 		std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(nodeId);
-		total_enqueue_drop += it_mac->second->GetQueueEnqueueDrop();
+		total_enqueue_drop += it_mac->second->GetEnqueueDrop();
 	}
 	return total_enqueue_drop;
 }
@@ -843,7 +843,7 @@ TdmaController::GetTotalCleanupDrop()
 	uint32_t total_cleanup_drop = 0;
 	for (uint32_t nodeId = 0; nodeId < 16; nodeId++) {
 		std::map<uint32_t,Ptr<TdmaMac>>::iterator it_mac = m_id2mac.find(nodeId);
-		total_cleanup_drop += it_mac->second->GetQueueCleanupDrop();
+		total_cleanup_drop += it_mac->second->GetCleanupDrop();
 	}
 	return total_cleanup_drop;
 }

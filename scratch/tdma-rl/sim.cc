@@ -322,7 +322,7 @@ TdmaExample::GenerateTraffic (uint32_t nodeId, uint32_t pktSize,
 void
 TdmaExample::ReceivePacket (Ptr <Socket> socket)
 {
-  std::cout <<"Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node "<< socket->GetNode()->GetId() << " Received one packet!" << std::endl;
+  std::cerr <<"Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node "<< socket->GetNode()->GetId() << " Received one packet!" << std::endl;
   NS_LOG_UNCOND("Time: "<<Simulator::Now ().GetNanoSeconds () << "ns, Node "<< socket->GetNode()->GetId() << " Received one packet!");
     
     
