@@ -13,7 +13,7 @@ import tensorflow as tf
 
 import matplotlib.pyplot as plt
 import os
-import time
+import datetime
 # os.environ["CUDA_VISIBLE_DEVICES"] = str(1) # use GPU 1
 # config = tf.compat.v1.ConfigProto()
 # config.gpu_options.allow_growth=True
@@ -389,5 +389,5 @@ with open('/tf/log/result.csv', 'a') as f:
         s += str(cleanup_drop) + ','
     s = s[:-1]
     s += '\n'
-    f.write('Experiment Finished at: {}'.format(time.time()))
+    f.write('Experiment Finished at: {}'.format(datetime.datetime.now())
     f.write(s)
